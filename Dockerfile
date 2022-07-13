@@ -22,5 +22,5 @@ COPY ./dm_nac_service /code/dm_nac_service
 #
 #CMD ["uvicorn", "app.post_service:app", "--host", "0.0.0.0", "--port", "80", "--root-path", "/fastapi"]
 
-EXPOSE 3306
+#EXPOSE 3306
 CMD ["uvicorn", "dm_nac_service.main:app", "--host", "0.0.0.0", "--port", "9019"]
