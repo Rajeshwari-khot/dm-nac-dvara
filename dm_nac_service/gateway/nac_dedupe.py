@@ -48,6 +48,8 @@ async def nac_dedupe(context, data):
         print('5 - Response from NAC dedupe api ', dedupe_context_response.status_code, dedupe_context_response.content)
         # print('printing dedupe context response ', dedupe_context_response.status_code, dedupe_context_response.content)
         if(dedupe_context_response.status_code == 200):
+            log_id = await insert_logs(str_url, 'NAC', str(get_root), dedupe_context_response.status_code,
+                                       dedupe_context_response.content, datetime.now())
             response_content = dedupe_context_response.content
             res = json.loads(response_content.decode('utf-8'))
 
@@ -57,11 +59,12 @@ async def nac_dedupe(context, data):
             result = res[0]
         else:
             dedupe_context_dict = response_to_dict(dedupe_context_response)
-            log_id = await insert_logs('NAC', 'NAC', 'get_root', dedupe_context_response.status_code,
-                                   dedupe_context_dict, datetime.now())
+            log_id = await insert_logs(str_url, 'NAC', str(get_root), dedupe_context_response.status_code,
+                                       dedupe_context_response.content, datetime.now())
             result = {"error": "Error Creating the Dedupe"}
     except Exception as e:
-        log_id = await insert_logs('NAC', 'NAC', 'str_get_root', dedupe_context_response.status_code, dedupe_context_response.content, datetime.now())
+        log_id = await insert_logs(str_url, 'NAC', str(get_root), dedupe_context_response.status_code,
+                                   dedupe_context_response.content, datetime.now())
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
 
     return result

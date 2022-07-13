@@ -19,6 +19,7 @@ async def nac_sanction(context, data):
         originator_id = get_env_or_fail(NAC_SERVER, 'originator-id', NAC_SERVER + 'originator ID not configured')
         sector_id = get_env_or_fail(NAC_SERVER, 'sector-id', NAC_SERVER + 'Sector ID not configured')
         url = validate_url + f'/po/{context}?originatorId={originator_id}&sectorId={sector_id}'
+        print('printing saction data inside of gateway - ', data)
         # print('nac sanction url', url)
         str_url = str(url)
         # str_data = data.dict()
@@ -39,6 +40,8 @@ async def nac_sanction(context, data):
         # print('printing sanction response status code', sanction_context_response.status_code)
         # print('printing sanction response status code', sanction_context_response.content)
         sanction_context_response_dict = response_to_dict(sanction_context_response)
+        log_id = await insert_logs(str_url, 'NAC', str(data), sanction_context_response.status_code,
+                                   sanction_context_response.content, datetime.now())
         # print('byte stream to dict', sanction_context_response_dict)
         result = sanction_context_response_dict
         #
@@ -58,7 +61,8 @@ async def nac_sanction(context, data):
         #     result = {"error": "Error Creating the Dedupe"}
     except Exception as e:
         print(e.args[0])
-        log_id = await insert_logs('GATEWAY', 'NAC', 'nac_sanction', sanction_context_response.status_code, sanction_context_response.content, datetime.now())
+        log_id = await insert_logs(str_url, 'NAC', str(data), sanction_context_response.status_code,
+                                   sanction_context_response.content, datetime.now())
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
 
     return result

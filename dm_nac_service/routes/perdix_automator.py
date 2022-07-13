@@ -12,7 +12,7 @@ from dm_nac_service.resource.generics import response_to_dict
 router = APIRouter()
 
 
-@router.post("/nac-dedupe-automator-data", status_code=status.HTTP_200_OK)
+@router.post("/nac-dedupe-automator-data", status_code=status.HTTP_200_OK, tags=["Automator"])
 async def post_automator_data(
     # request_info: Request,
     # response: Response
@@ -33,8 +33,8 @@ async def post_automator_data(
         customer_data = payload["enrollmentDTO"]["customer"]
         loan_data = payload["loanDTO"]["loanAccount"]
         first_name = customer_data.get("firstName", "")
-        middle_name = customer_data.get("middleName", "")
-        last_name = customer_data.get("lastName", "")
+        middle_name = customer_data.get("", "Dummy")
+        last_name = customer_data.get("", "Dummy")
         first_name = first_name if first_name else ""
         last_name = last_name if last_name else ""
         middle_name = middle_name if middle_name else ""
@@ -58,7 +58,7 @@ async def post_automator_data(
         dedupe_data = {
                 "accountNumber": account_number,
                 "contactNumber": mobile_number,
-                "customerName": first_name,
+                "customerName": full_name,
                 "dateofBirth": str(date_of_birth),
                 "kycDetailsList": [
                     {
@@ -89,16 +89,17 @@ async def post_automator_data(
         is_eligible_flag = fetch_dedupe_info.get('isEligible', '')
         str_fetch_dedupe_info = fetch_dedupe_info.get('dedupeRefId', '')
         message_remarks = fetch_dedupe_info.get('message', '')
+        print('priting dedupe reference id ', str_fetch_dedupe_info)
         if(is_eligible_flag == ''):
             print('is eligible none', is_eligible_flag)
             update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
                                                  'PROCEED', message_remarks)
-            print('14 - updating loan information with dedupe reference to Perdix', update_loan_info)
+            print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         else:
             print('is eligible not none', is_eligible_flag)
             update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Rejected', message_remarks,
                                                  'PROCEED', message_remarks)
-            print('14 - updating loan information with dedupe reference to Perdix', update_loan_info)
+            print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # Posting the loan id to the Perdix API
         # Fake loan id
         sm_loan_id = 287
@@ -120,7 +121,7 @@ async def post_automator_data(
 
 
 
-@router.post("/nac-sanction-automator-data", status_code=status.HTTP_200_OK)
+@router.post("/nac-sanction-automator-data", status_code=status.HTTP_200_OK, tags=["Automator"])
 async def post_sanction_automator_data(
     # request_info: Request,
     # response: Response
@@ -135,11 +136,19 @@ async def post_sanction_automator_data(
         # Below is for data published manually
         payload = request_info
 
+        # Get Dedupe Reference ID
+        # sm_loan_id = 287
+        # print('before loan fetch')
+        # fetch_dedupe_info = await find_dedupe(sm_loan_id)
+        dedupe_reference_id = "5134610851082868"
+        # print(fetch_dedupe_info)
+
+
         customer_data = payload["enrollmentDTO"]["customer"]
         loan_data = payload["loanDTO"]["loanAccount"]
         first_name = customer_data.get("firstName", "")
-        middle_name = customer_data.get("middleName", "")
-        last_name = customer_data.get("lastName", "")
+        middle_name = customer_data.get("", "Dummy")
+        last_name = customer_data.get("", "Dummy")
         first_name = first_name if first_name else ""
         last_name = last_name if last_name else ""
         middle_name = middle_name if middle_name else ""
@@ -170,13 +179,13 @@ async def post_sanction_automator_data(
             bank_accounts_info = customer_data["customerBankAccounts"][0]
         account_number = bank_accounts_info.get("accountNumber", "1234313323")
         customer_bank_name = bank_accounts_info.get("customerBankName", "YES BANK LIMITED")
-        owned_vehicle=customer_data.get("","2W")
+        owned_vehicle = customer_data.get("","2W")
         curr_door_number = customer_data.get("doorNo", "jayanagar201")
-        curr_locality=customer_data.get("locality", "bangalore")
-        landmark=customer_data.get("","banashankari circle")
-        curr_district=customer_data.get("district","bangalore")
+        curr_locality = customer_data.get("locality", "bangalore")
+        landmark = customer_data.get("","banashankari circle")
+        curr_district = customer_data.get("district","bangalore")
         # curr_city=customer_data.get("","bangalore")
-        curr_state=customer_data.get("state","Karnataka")
+        curr_state = customer_data.get("state","Karnataka")
         occupation_info = {}
         if len(customer_data["familyMembers"]) > 0:
             occupation_info = customer_data["familyMembers"][0]
@@ -189,11 +198,11 @@ async def post_sanction_automator_data(
         income_info = {}
         if len(customer_data["familyMembers"]) > 0:
             income_info = customer_data["familyMembers"][0]["incomes"][0]
-        gross_income= income_info.get("incomeEarned", 30000)
-        net_income=income_info.get("incomeEarned", 40000)
-        loan_purpose=loan_data.get("requestedLoanPurpose","Others-TO BUY GOLD")
-        loan_amount=loan_data.get("loanAmount","10000")
-        interest_rate=loan_data.get("interestRate","25")
+        gross_income = income_info.get("incomeEarned", 30000)
+        net_income = income_info.get("incomeEarned", 40000)
+        loan_purpose = loan_data.get("requestedLoanPurpose","Others-TO BUY GOLD")
+        loan_amount = loan_data.get("loanAmount","10000")
+        interest_rate = loan_data.get("interestRate","25")
         schedule_date = loan_data.get("scheduleStartDate", "")
         if "str" != type(schedule_date).__name__:
             schedule_date = "{:04d}-{:02d}-{:02d}".format(
@@ -201,21 +210,22 @@ async def post_sanction_automator_data(
                 schedule_date["monthValue"],
                 schedule_date["dayOfMonth"],
             )
-        process_fee=loan_data.get("processingFeeInPaisa", 900)
-        pre_emi=loan_data.get("", 0)
-        max_emi=loan_data.get("emi", 100)
-        gst=loan_data.get("",0)
+        process_fee = loan_data.get("processingFeeInPaisa", 900)
+        pre_emi = loan_data.get("", 0)
+        max_emi = loan_data.get("emi", 100)
+        gst = loan_data.get("",0)
         emi_info = {}
         if len(customer_data["liabilities"]) > 0:
             emi_info = customer_data["liabilities"][0]
         emi_date = emi_info.get("", "2022-04-10")
         repayment_frequency = payload.get("frequency", "WEEKLY")
         repayment_frequency = "Monthly" if repayment_frequency == "Monthly" else "F"
-        repayment_frequency=loan_data.get("frequencyRequested","WEEKLY")
+        repayment_frequency = loan_data.get("frequencyRequested","WEEKLY")
         tenure_value = loan_data.get("tenure", 36)
         product_name = loan_data.get("productCode", "Personal Loan")
         email_id = customer_data.get("email", "testsm1@gmail.com")
         maritual_status = customer_data.get("maritalStatus", "MARRIED")
+        client_id = loan_data.get("customerId", "12345")
         repayment_info = {}
         if len(customer_data["verifications"]) > 0:
             repayment_info = customer_data["verifications"][0]
@@ -247,6 +257,7 @@ async def post_sanction_automator_data(
                 "permPincode": pincode,
                 "occupation": curr_occupation,
                 "companyName": "",
+                "clientId": str(client_id),
                 "grossMonthlyIncome": gross_income,
                 "netMonthlyIncome": net_income,
                 "incomeValidationStatus": "",
@@ -270,17 +281,18 @@ async def post_sanction_automator_data(
                 "primaryBankAccount": account_number,
                 "bankName": customer_bank_name,
                 "modeOfSalary": mode_salary,
-                "clientId": "",
-                "dedupeReferenceId": "",
+                "dedupeReferenceId": dedupe_reference_id,
                 "email": email_id,
                 "middleName": middle_name,
                 "maritalStatus": maritual_status,
                 "loanId": str(sm_loan_id),
                 }
-        # print(sanction_data)
+        print('1 - Sanction Data from Perdix and Sending the data to create sanction function', sanction_data)
         sanction_response = await create_sanction(sanction_data)
-        print('0 - testing', sanction_response)
-        print('1 - Prepare Data to push to NAC endpoint', sanction_data)
+        update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
+                                             'PROCEED', message_remarks)
+        # print('0 - testing', sanction_response)
+        # print('1 - Prepare Data to push to NAC endpoint', sanction_data)
         # return sanction_data
 
         return sanction_data

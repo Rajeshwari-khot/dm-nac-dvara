@@ -39,20 +39,39 @@ router = APIRouter()
 async def create_sanction(
     # sanction_data: CreateSanction,
     sanction_data,
-    database: Database = Depends(get_database)
+    # database: Database = Depends(get_database)
 ):
     try:
-        print('2 - prepared data from create_sanction', sanction_data.dict())
-        sanction_dict = sanction_data.dict()
+        database = get_database()
+        sanction_data['dedupeReferenceId'] = 5134610851082868
+        sanction_data['emiWeek'] = 1
+        sanction_data['lastName'] = "Dummy"
+        sanction_data['currCity'] = "Bangalore"
+        sanction_data['companyName'] = "Dvara"
+        sanction_data['tenureUnits'] = "MONTHS"
+        # sanction_data['clientId'] = "34545"
+        sanction_data['permCity'] = "Bangalore"
+        # we have occupation which is not matching with NAC default values
+        sanction_data['occupation'] = "SELF_EMPLOYED"
+        sanction_data['repaymentFrequency'] = "WEEKLY"
+        sanction_data['incomeValidationStatus'] = "SUCCESS"
+
+
+        # Below is for fake data
+        # sanction_dict = sanction_data.dict()
+
+        sanction_dict = sanction_data
+        print('2 - Received the data and prepared to be posting this data to NAC Sanction Endpoint', sanction_dict)
+
         # Real API response from NAC
         sanction_response = await nac_sanction('uploadSanctionJSON', sanction_dict)
-        print('3 - sanction response from NAC create sanction endpoint', sanction_response)
+        print('3 - Response from NAC Sanction Endpoint', sanction_response)
         get_sanction_response = sanction_response.get('error')
         if(sanction_response['content']['status'] == 'SUCCESS'):
             customer_id = sanction_response['content']['value']['customerId']
             store_record_time = datetime.now()
             sanction_info = {
-                'customer_id': customer_id,
+                'customer_id': str(customer_id),
                 'created_date': store_record_time,
                 'mobile': sanction_dict['mobile'],
                 'first_name': sanction_dict['firstName'],
@@ -108,22 +127,20 @@ async def create_sanction(
                 'middle_name': sanction_dict['middleName'],
                 'marital_status': sanction_dict['maritalStatus'],
                 'loan_id': sanction_dict['loanId'],
-
-
-
-
-
             }
+            print('4 - Storing customer Id from NAC Sanction Endpoint to DB', sanction_info)
             insert_query = sanction.insert().values(sanction_info)
             print('query', insert_query)
             sanction_id = await database.execute(insert_query)
+            print('5 - Saved Sanction information to DB', sanction_info)
             result = JSONResponse(status_code=200, content={"customerid": sanction_response})
+            print('6 - Update customer id to udf42 in Perdix', sanction_info)
             return result
 
             # result = sanction_info
         else:
-            log_id = await insert_logs('create_sanction', 'NAC', sanction_response['content']['status'], '500', sanction_response['content']['message'],
-                                       datetime.now())
+            log_id = await insert_logs('DB', 'NAC', 'DEDUPE', sanction_response.status_code,
+                                       sanction_response.content, datetime.now())
             result = JSONResponse(status_code=500, content={"message": f"Issue with Northern Arc API"})
 
 
