@@ -25,8 +25,10 @@ async def find_dedupe(
         loan_id
 ) -> DedupeDB:
     try:
+        print('selecting loan id')
         database = get_database()
-        select_query = dedupe.select().where(dedupe.c.loan_id == loan_id)
+        select_query = dedupe.select().where(dedupe.c.loan_id == loan_id).order_by(dedupe.c.id.desc())
+        print('loan query', select_query)
         raw_dedupe = await database.fetch_one(select_query)
         dedupe_dict = {
             "dedupeRefId": raw_dedupe[1],
@@ -132,37 +134,73 @@ async def create_dedupe(
 
 
         # For Real API
-        loan_id = dedupe_response['dedupeRequestSource']['loanId'],
-        dedupue_info = {
-            'dedupe_reference_id': dedupe_response_id,
-            'account_number': dedupe_response['dedupeRequestSource']['accountNumber'],
-            'contact_number': dedupe_response['dedupeRequestSource']['contactNumber'],
-            'customer_name': dedupe_response['dedupeRequestSource']['customerName'],
-            # 'dob': dedupe_response['dedupeRequestSource']['dateOfBirth'],
-            'loan_id': loan_id,
-            'pincode': dedupe_response['dedupeRequestSource']['pincode'],
-            'response_type': dedupe_response['type'],
-            'dedupe_present': str(dedupe_response['isDedupePresent']),
-            'result_attribute': dedupe_response['results'][0]['attribute'],
-            'result_value': dedupe_response.get('results')[0].get('value', 'NA'),
-            'result_value': dedupe_response['results'][0]['value'],
-            'result_rule_name': dedupe_response['results'][0]['ruleName'],
-            'result_ref_loan_id': dedupe_response['results'][0]['id'],
-            'result_is_eligible': dedupe_response['results'][0]['isEligible'],
-            'result_message': dedupe_response['results'][0]['message'],
-            'ref_originator_id': dedupe_response['referenceLoan']['originatorId'],
-            'ref_sector_id': dedupe_response['referenceLoan']['sectorId'],
-            'ref_max_dpd': dedupe_response['referenceLoan']['maxDpd'],
-            'ref_first_name': dedupe_response['referenceLoan']['firstName'],
-            'ref_date_of_birth': dedupe_response['referenceLoan']['dateOfBirth'],
-            'ref_mobile_phone': dedupe_response['referenceLoan']['mobilePhone'],
-            'ref_account_number_loan_ref': dedupe_response['referenceLoan']['accountNumber'],
-            'id_type1': id_type1,
-            'id_value1': id_value1,
-            'id_type2': id_type2,
-            'id_value2': id_value2,
-            'created_date': store_record_time,
-        }
+        loan_id = dedupe_response['dedupeRequestSource']['loanId']
+        print('printing dedupe result set', dedupe_response['results'])
+        dedupe_response_result = len(dedupe_response['results'])
+        print('dedupe_response_result - ', dedupe_response_result)
+        if(dedupe_response_result > 0 ):
+            dedupue_info = {
+                'dedupe_reference_id': dedupe_response_id,
+                'account_number': dedupe_response['dedupeRequestSource']['accountNumber'],
+                'contact_number': dedupe_response['dedupeRequestSource']['contactNumber'],
+                'customer_name': dedupe_response['dedupeRequestSource']['customerName'],
+                # 'dob': dedupe_response['dedupeRequestSource']['dateOfBirth'],
+                'loan_id': loan_id,
+                'pincode': dedupe_response['dedupeRequestSource']['pincode'],
+                'response_type': dedupe_response['type'],
+                'dedupe_present': str(dedupe_response['isDedupePresent']),
+                'result_attribute': dedupe_response['results'][0]['attribute'],
+                'result_value': dedupe_response.get('results')[0].get('value', 'NA'),
+                'result_value': dedupe_response['results'][0]['value'],
+                'result_rule_name': dedupe_response['results'][0]['ruleName'],
+                'result_ref_loan_id': dedupe_response['results'][0]['id'],
+                'result_is_eligible': dedupe_response['results'][0]['isEligible'],
+                'result_message': dedupe_response['results'][0]['message'],
+                'ref_originator_id': dedupe_response['referenceLoan']['originatorId'],
+                'ref_sector_id': dedupe_response['referenceLoan']['sectorId'],
+                'ref_max_dpd': dedupe_response['referenceLoan']['maxDpd'],
+                'ref_first_name': dedupe_response['referenceLoan']['firstName'],
+                'ref_date_of_birth': dedupe_response['referenceLoan']['dateOfBirth'],
+                'ref_mobile_phone': dedupe_response['referenceLoan']['mobilePhone'],
+                'ref_account_number_loan_ref': dedupe_response['referenceLoan']['accountNumber'],
+                'id_type1': id_type1,
+                'id_value1': id_value1,
+                'id_type2': id_type2,
+                'id_value2': id_value2,
+                'created_date': store_record_time,
+            }
+        else:
+            dedupue_info = {
+                'dedupe_reference_id': dedupe_response_id,
+                'account_number': dedupe_response['dedupeRequestSource']['accountNumber'],
+                'contact_number': dedupe_response['dedupeRequestSource']['contactNumber'],
+                'customer_name': dedupe_response['dedupeRequestSource']['customerName'],
+                # 'dob': dedupe_response['dedupeRequestSource']['dateOfBirth'],
+                'loan_id': loan_id,
+                'pincode': dedupe_response['dedupeRequestSource']['pincode'],
+                'response_type': dedupe_response['type'],
+                'dedupe_present': str(dedupe_response['isDedupePresent']),
+                # 'result_attribute': dedupe_response['results'][0]['attribute'],
+                # 'result_value': dedupe_response.get('results')[0].get('value', 'NA'),
+                # 'result_value': dedupe_response['results'][0]['value'],
+                # 'result_rule_name': dedupe_response['results'][0]['ruleName'],
+                # 'result_ref_loan_id': dedupe_response['results'][0]['id'],
+                # 'result_is_eligible': dedupe_response['results'][0]['isEligible'],
+                # 'result_message': dedupe_response['results'][0]['message'],
+                # 'ref_originator_id': dedupe_response['referenceLoan']['originatorId'],
+                # 'ref_sector_id': dedupe_response['referenceLoan']['sectorId'],
+                # 'ref_max_dpd': dedupe_response['referenceLoan']['maxDpd'],
+                # 'ref_first_name': dedupe_response['referenceLoan']['firstName'],
+                # 'ref_date_of_birth': dedupe_response['referenceLoan']['dateOfBirth'],
+                # 'ref_mobile_phone': dedupe_response['referenceLoan']['mobilePhone'],
+                # 'ref_account_number_loan_ref': dedupe_response['referenceLoan']['accountNumber'],
+                'id_type1': id_type1,
+                'id_value1': id_value1,
+                'id_type2': id_type2,
+                'id_value2': id_value2,
+                'created_date': store_record_time,
+            }
+
         print('10 - preparing Dedupe data to store in DB - ', dedupue_info)
         # print('before dedupe_info', dedupe_response['dedupeRequestSource']['dateOfBirth'])
 

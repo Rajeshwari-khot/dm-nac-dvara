@@ -85,11 +85,11 @@ async def post_automator_data(
         print('13 - extracting loan information from Perdix', fetch_dedupe_info)
 
         # Condition to check the success and failure case
-        sm_loan_id = 287
+        # sm_loan_id = 287
         is_eligible_flag = fetch_dedupe_info.get('isEligible', '')
         str_fetch_dedupe_info = fetch_dedupe_info.get('dedupeRefId', '')
         message_remarks = fetch_dedupe_info.get('message', '')
-        print('priting dedupe reference id ', str_fetch_dedupe_info)
+        # print('priting dedupe reference id ', str_fetch_dedupe_info)
         if(is_eligible_flag == ''):
             print('is eligible none', is_eligible_flag)
             update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
@@ -102,16 +102,21 @@ async def post_automator_data(
             print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # Posting the loan id to the Perdix API
         # Fake loan id
-        sm_loan_id = 287
-        # fetch_loan_info = await perdix_fetch_loan(sm_loan_id)
+        # sm_loan_id = 287
+        fetch_loan_info = await perdix_fetch_loan(sm_loan_id)
         # print('13 - extracting loan information from Perdix', fetch_loan_info)
 
+        #  Sending Response back to Perdix Automator
+        result = {
+            "status": "SUCCESS",
+            "deduperefid": str_fetch_dedupe_info
+        }
         # Updating Dedupe Reference ID to Perdix API
         # str_fetch_dedupe_info = str(fetch_dedupe_info)
 
 
 
-        return dedupe_data
+        return result
     except Exception as e:
         print(e)
         log_id = await insert_logs('MYSQL', 'DB', 'NA', '500', {e.args[0]},
@@ -140,7 +145,7 @@ async def post_sanction_automator_data(
         # sm_loan_id = 287
         # print('before loan fetch')
         # fetch_dedupe_info = await find_dedupe(sm_loan_id)
-        dedupe_reference_id = "5134610851082868"
+        # dedupe_reference_id = "5134610851082868"
         # print(fetch_dedupe_info)
 
 
