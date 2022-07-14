@@ -6,7 +6,7 @@ from dm_nac_service.routes.dedupe import create_dedupe, find_dedupe
 from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
 from dm_nac_service.gateway.nac_perdix_automator import perdix_post_login, perdix_fetch_loan, perdix_update_loan
 from dm_nac_service.gateway.nac_sanction import nac_sanction
-from dm_nac_service.routes.sanction import create_sanction
+from dm_nac_service.routes.sanction import create_sanction, find_sanction
 from dm_nac_service.resource.generics import response_to_dict
 
 router = APIRouter()
@@ -92,12 +92,12 @@ async def post_automator_data(
         # print('priting dedupe reference id ', str_fetch_dedupe_info)
         if(is_eligible_flag == ''):
             print('is eligible none', is_eligible_flag)
-            update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
+            update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
                                                  'PROCEED', message_remarks)
             print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         else:
             print('is eligible not none', is_eligible_flag)
-            update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Rejected', message_remarks,
+            update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Rejected', message_remarks,
                                                  'PROCEED', message_remarks)
             print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # Posting the loan id to the Perdix API
@@ -116,16 +116,12 @@ async def post_automator_data(
         # Updating Dedupe Reference ID to Perdix API
         # str_fetch_dedupe_info = str(fetch_dedupe_info)
 
-
-
         return result
     except Exception as e:
         print(e)
         log_id = await insert_logs('MYSQL', 'DB', 'NA', '500', {e.args[0]},
                                    datetime.now())
         result = JSONResponse(status_code=500, content={"message": f"Issue with Northern Arc API, {e.args[0]}"})
-
-
 
 
 @router.post("/nac-sanction-automator-data", status_code=status.HTTP_200_OK, tags=["Automator"])
@@ -194,6 +190,7 @@ async def post_sanction_automator_data(
         # curr_city=customer_data.get("","bangalore")
         curr_state = customer_data.get("state","Karnataka")
         occupation_info = {}
+
         if len(customer_data["familyMembers"]) > 0:
             occupation_info = customer_data["familyMembers"][0]
         curr_occupation = occupation_info.get("occupation", "SALARIED_OTHER")
@@ -211,32 +208,41 @@ async def post_sanction_automator_data(
         loan_amount = loan_data.get("loanAmount","10000")
         interest_rate = loan_data.get("interestRate","25")
         schedule_date = loan_data.get("scheduleStartDate", "")
+
         if "str" != type(schedule_date).__name__:
             schedule_date = "{:04d}-{:02d}-{:02d}".format(
                 schedule_date["year"],
                 schedule_date["monthValue"],
                 schedule_date["dayOfMonth"],
             )
+
         process_fee = loan_data.get("processingFeeInPaisa", 900)
         pre_emi = loan_data.get("", 0)
         max_emi = loan_data.get("emi", 100)
         gst = loan_data.get("",0)
+
         emi_info = {}
         if len(customer_data["liabilities"]) > 0:
             emi_info = customer_data["liabilities"][0]
         emi_date = emi_info.get("", "2022-04-10")
         repayment_frequency = payload.get("frequency", "WEEKLY")
+
         repayment_frequency = "Monthly" if repayment_frequency == "Monthly" else "F"
         repayment_frequency = loan_data.get("frequencyRequested","WEEKLY")
         tenure_value = loan_data.get("tenure", 36)
+        tenure_value_int = int(tenure_value)
+
         product_name = loan_data.get("productCode", "Personal Loan")
         email_id = customer_data.get("email", "testsm1@gmail.com")
         maritual_status = customer_data.get("maritalStatus", "MARRIED")
         client_id = loan_data.get("customerId", "12345")
+
         repayment_info = {}
         if len(customer_data["verifications"]) > 0:
             repayment_info = customer_data["verifications"][0]
+
         repayment_mode = repayment_info.get("", "NACH")
+
         sanction_data = {
                 "mobile": mobile_number,
                 "firstName": first_name,
@@ -282,22 +288,34 @@ async def post_sanction_automator_data(
                 "emiWeek": "",
                 "repaymentFrequency": repayment_frequency,
                 "repaymentMode": repayment_mode,
-                "tenureValue": int(tenure_value),
+                "tenureValue": tenure_value_int,
                 "tenureUnits": "",
                 "productName": product_name,
                 "primaryBankAccount": account_number,
                 "bankName": customer_bank_name,
                 "modeOfSalary": mode_salary,
-                "dedupeReferenceId": dedupe_reference_id,
+                # "dedupeReferenceId": dedupe_reference_id,
                 "email": email_id,
                 "middleName": middle_name,
                 "maritalStatus": maritual_status,
                 "loanId": str(sm_loan_id),
                 }
+        print('COMING HERE')
         print('1 - Sanction Data from Perdix and Sending the data to create sanction function', sanction_data)
         sanction_response = await create_sanction(sanction_data)
-        update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
+        print('100 - response back from NAC ', sanction_response)
+
+        get_sanction_ref = await find_sanction(sm_loan_id)
+        print('101 - FOUND CUSTOMER ID FROM DB', get_sanction_ref)
+        reference_id = get_sanction_ref.get('customerId', '')
+        print('printing referece id ', reference_id)
+        message_remarks = 'testing '
+
+        update_loan_info = await update_loan('SANCTION', sm_loan_id, reference_id, 'Dedupe', message_remarks,
                                              'PROCEED', message_remarks)
+        # print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
+        # update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
+        #                                      'PROCEED', message_remarks)
         # print('0 - testing', sanction_response)
         # print('1 - Prepare Data to push to NAC endpoint', sanction_data)
         # return sanction_data
@@ -326,9 +344,9 @@ async def update_loan(
 
     # For testing manually
     # loan_info: dict = Body(...),
-
+    url_type: str,
     loan_id: int,
-    dedupe_ref_id: str,
+    reference_id: str,
     stage: str,
     reject_reason: str,
     loan_process_action: str,
@@ -360,13 +378,37 @@ async def update_loan(
     if "loanProcessAction" in get_loan_info:
         get_loan_info['loanProcessAction'] = "Testing loanProcessAction"
     if "accountUserDefinedFields" in get_loan_info:
-        get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
-            'udf41': dedupe_ref_id
-            # 'udf42': "5211201547885960"
-            # 'udf43': "5211201547885960"
-            # 'udf44': "5211201547885960"
-            # 'udf45': "5211201547885960"
-        }
+        if(url_type == 'DEDUPE'):
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf41': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf41': reference_id
+            #     }
+            # }
+            get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf41'] = reference_id
+
+            print('dedupe', get_loan_info)
+        if (url_type == 'SANCTION'):
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf42': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf42': reference_id
+            #     }
+            # }
+            get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf42'] = reference_id
+            print('sanction', get_loan_info)
     # if "version" in get_loan_info:
     #     get_loan_info['version'] = json_data_version + 2
 

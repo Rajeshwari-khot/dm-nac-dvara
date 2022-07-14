@@ -19,7 +19,7 @@ async def nac_sanction(context, data):
         originator_id = get_env_or_fail(NAC_SERVER, 'originator-id', NAC_SERVER + 'originator ID not configured')
         sector_id = get_env_or_fail(NAC_SERVER, 'sector-id', NAC_SERVER + 'Sector ID not configured')
         url = validate_url + f'/po/{context}?originatorId={originator_id}&sectorId={sector_id}'
-        print('printing saction data inside of gateway - ', data)
+        print('4 - Received data from sanction - ', data)
         # print('nac sanction url', url)
         str_url = str(url)
         # str_data = data.dict()
@@ -36,6 +36,7 @@ async def nac_sanction(context, data):
         # print('coming inside of nac_sanction', data)
         # get_root = str_data.get('__root__')
         # str_get_root = str(get_root)
+        print('*********** printin sanction data to be posted', data)
         sanction_context_response = requests.post(url, json=data, headers=headers)
         # print('printing sanction response status code', sanction_context_response.status_code)
         # print('printing sanction response status code', sanction_context_response.content)
@@ -43,7 +44,10 @@ async def nac_sanction(context, data):
         log_id = await insert_logs(str_url, 'NAC', str(data), sanction_context_response.status_code,
                                    sanction_context_response.content, datetime.now())
         # print('byte stream to dict', sanction_context_response_dict)
+
         result = sanction_context_response_dict
+        print(
+            '*********************************** SUCCESSFULLY POSTED SANCTION DATA TO NAC ENDPOINT  ***********************************')
         #
         # if(dedupe_context_response.status_code == 200):
         #     print('200 ok')
@@ -60,6 +64,8 @@ async def nac_sanction(context, data):
         #                            dedupe_context_dict, datetime.now())
         #     result = {"error": "Error Creating the Dedupe"}
     except Exception as e:
+        print(
+            '*********************************** FAILURE POSTING SANCTION DATA TO NAC ENDPOINT  ***********************************')
         print(e.args[0])
         log_id = await insert_logs(str_url, 'NAC', str(data), sanction_context_response.status_code,
                                    sanction_context_response.content, datetime.now())

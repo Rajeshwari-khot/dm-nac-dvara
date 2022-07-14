@@ -25,10 +25,10 @@ async def find_dedupe(
         loan_id
 ) -> DedupeDB:
     try:
-        print('selecting loan id')
+        # print('selecting loan id')
         database = get_database()
         select_query = dedupe.select().where(dedupe.c.loan_id == loan_id).order_by(dedupe.c.id.desc())
-        print('loan query', select_query)
+        # print('loan query', select_query)
         raw_dedupe = await database.fetch_one(select_query)
         dedupe_dict = {
             "dedupeRefId": raw_dedupe[1],
@@ -36,7 +36,7 @@ async def find_dedupe(
             "isEl1igible": "True",
             "message": raw_dedupe[19]
         }
-        print('INSIDE OF FIND DEDUPE', dedupe_dict)
+        print( '*********************************** SUCCESSFULLY FETCHED DEDUPE REFERENCE ID FROM DB  ***********************************')
         # result = raw_dedupe[1]
         result = dedupe_dict
         if raw_dedupe is None:
@@ -44,6 +44,8 @@ async def find_dedupe(
 
         # return DedupeDB(**raw_dedupe)
     except Exception as e:
+        print(
+            '*********************************** FAILURE FETCHING DEDUPE REFERENCE ID FROM DB  ***********************************')
         log_id = await insert_logs('MYSQL', 'DB', 'find_dedupe', '500', {e.args[0]},
                                    datetime.now())
         result = JSONResponse(status_code=500, content={"message": f"Issue with fetching dedupe ref id from db, {e.args[0]}"})

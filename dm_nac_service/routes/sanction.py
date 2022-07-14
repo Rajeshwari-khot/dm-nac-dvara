@@ -14,6 +14,7 @@ from fastapi.exceptions import HTTPException
 from dm_nac_service.commons import get_env_or_fail
 from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
 from dm_nac_service.gateway.nac_sanction import nac_sanction, nac_sanction_fileupload, nac_get_sanction
+from dm_nac_service.routes.dedupe import create_dedupe, find_dedupe
 from dm_nac_service.app_responses.sanction import sanction_request_data, sanction_response_success_data, sanction_response_error_data, sanction_file_upload_response1, sanction_file_upload_response2
 from dm_nac_service.data.dedupe_model import (
     dedupe
@@ -35,6 +36,37 @@ FILE_CHOICES = ['SELFIE', 'AADHAR_XML', 'MITC', 'VOTER_CARD', 'DRIVING_LICENSE',
 router = APIRouter()
 
 
+@router.post("/find-sanction", tags=["Sanction"])
+async def find_sanction(
+        loan_id
+):
+    try:
+        # print('selecting loan id')
+        database = get_database()
+        select_query = sanction.select().where(sanction.c.loan_id == loan_id).order_by(sanction.c.id.desc())
+        # print('loan query', select_query)
+        raw_dedupe = await database.fetch_one(select_query)
+        dedupe_dict = {
+            "customerId": raw_dedupe[1],
+            # "isEligible": raw_dedupe[18],
+            # "isEl1igible": "True",
+            "dedupeRefId": raw_dedupe[57]
+        }
+        print( '*********************************** SUCCESSFULLY FETCHED DEDUPE REFERENCE ID FROM DB  ***********************************')
+        # result = raw_dedupe[1]
+        result = dedupe_dict
+        if raw_dedupe is None:
+            return None
+
+        # return DedupeDB(**raw_dedupe)
+    except Exception as e:
+        print(
+            '*********************************** FAILURE FETCHING DEDUPE REFERENCE ID FROM DB  ***********************************')
+        log_id = await insert_logs('MYSQL', 'DB', 'find_dedupe', '500', {e.args[0]},
+                                   datetime.now())
+        result = JSONResponse(status_code=500, content={"message": f"Issue with fetching dedupe ref id from db, {e.args[0]}"})
+    return result
+
 @router.post("/sanction", tags=["Sanction"])
 async def create_sanction(
     # sanction_data: CreateSanction,
@@ -43,7 +75,7 @@ async def create_sanction(
 ):
     try:
         database = get_database()
-        sanction_data['dedupeReferenceId'] = 5134610851082868
+
         sanction_data['emiWeek'] = 1
         sanction_data['lastName'] = "Dummy"
         sanction_data['currCity'] = "Bangalore"
@@ -56,16 +88,23 @@ async def create_sanction(
         sanction_data['repaymentFrequency'] = "WEEKLY"
         sanction_data['incomeValidationStatus'] = "SUCCESS"
 
-
         # Below is for fake data
         # sanction_dict = sanction_data.dict()
 
+        # print('coming here inside create sanction')
+        sm_loan_id = sanction_data['loanId']
+        fetch_dedupe_info = await find_dedupe(sm_loan_id)
+        dedupe_reference_id = fetch_dedupe_info['dedupeRefId']
+        print('2 - extracted dedupe reference id from DB', fetch_dedupe_info)
+        sanction_data['dedupeReferenceId'] = int(dedupe_reference_id)
+
         sanction_dict = sanction_data
-        print('2 - Received the data and prepared to be posting this data to NAC Sanction Endpoint', sanction_dict)
+
+        print('3 - Posting data to NAC create sanction endpoint', sanction_dict)
 
         # Real API response from NAC
         sanction_response = await nac_sanction('uploadSanctionJSON', sanction_dict)
-        print('3 - Response from NAC Sanction Endpoint', sanction_response)
+        print('5 - Response from NAC Sanction Endpoint', sanction_response)
         get_sanction_response = sanction_response.get('error')
         if(sanction_response['content']['status'] == 'SUCCESS'):
             customer_id = sanction_response['content']['value']['customerId']
