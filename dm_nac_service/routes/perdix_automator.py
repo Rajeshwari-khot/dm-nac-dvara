@@ -108,8 +108,10 @@ async def post_automator_data(
 
         #  Sending Response back to Perdix Automator
         result = {
-            "status": "SUCCESS",
-            "deduperefid": str_fetch_dedupe_info
+            "partnerHandoffIntegration": {
+                "status": "SUCCESS",
+                "partnerReferenceKey": str_fetch_dedupe_info
+            }
         }
         # Updating Dedupe Reference ID to Perdix API
         # str_fetch_dedupe_info = str(fetch_dedupe_info)
