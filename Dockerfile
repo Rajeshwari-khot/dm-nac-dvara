@@ -24,4 +24,4 @@ COPY ./dm_nac_service /code/dm_nac_service
 
 #EXPOSE 3306
 #CMD ["uvicorn", "dm_nac_service.main:app", "--host", "0.0.0.0", "--port", "9019"]
-CMD ["uvicorn", "app.post_service:app", "--host", "0.0.0.0", "--port", "9019", "--root-path", "/dm-nac"]
+CMD ["uvicorn", "dm_nac_service.main:app", "--host", "0.0.0.0", "--port", "9019", "--root-path", "/dm-nac"]
