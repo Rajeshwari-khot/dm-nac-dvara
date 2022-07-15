@@ -325,6 +325,8 @@ async def post_sanction_automator_data(
 
         update_loan_info = await update_loan('SANCTION', sm_loan_id, reference_id, 'Dedupe', message_remarks,
                                              'PROCEED', message_remarks)
+        payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+        payload['partnerHandoffIntegration']['partnerReferenceKey'] = reference_id
         # print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
         #                                      'PROCEED', message_remarks)
@@ -332,7 +334,7 @@ async def post_sanction_automator_data(
         # print('1 - Prepare Data to push to NAC endpoint', sanction_data)
         # return sanction_data
 
-        return sanction_data
+        return payload
     except Exception as e:
         print(e)
 
