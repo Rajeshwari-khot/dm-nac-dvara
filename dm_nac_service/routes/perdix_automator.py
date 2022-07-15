@@ -105,14 +105,16 @@ async def post_automator_data(
         # sm_loan_id = 287
         fetch_loan_info = await perdix_fetch_loan(sm_loan_id)
         # print('13 - extracting loan information from Perdix', fetch_loan_info)
-
+        payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+        payload['partnerHandoffIntegration']['partnerReferenceKey'] = str_fetch_dedupe_info
         #  Sending Response back to Perdix Automator
-        result = {
-            "partnerHandoffIntegration": {
-                "status": "SUCCESS",
-                "partnerReferenceKey": str_fetch_dedupe_info
-            }
-        }
+        # result = {
+        #     "partnerHandoffIntegration": {
+        #         "status": "SUCCESS",
+        #         "partnerReferenceKey": str_fetch_dedupe_info
+        #     }
+        # }
+        result = payload
         # Updating Dedupe Reference ID to Perdix API
         # str_fetch_dedupe_info = str(fetch_dedupe_info)
 
