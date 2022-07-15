@@ -86,20 +86,30 @@ async def post_automator_data(
 
         # Condition to check the success and failure case
         # sm_loan_id = 287
+        is_dedupe_present = fetch_dedupe_info.get('isDedupePresent', '')
         is_eligible_flag = fetch_dedupe_info.get('isEligible', '')
         str_fetch_dedupe_info = fetch_dedupe_info.get('dedupeRefId', '')
-        message_remarks = fetch_dedupe_info.get('message', '')
+
         # print('priting dedupe reference id ', str_fetch_dedupe_info)
-        if(is_eligible_flag == ''):
+        if(is_dedupe_present == 'False'):
             print('is eligible none', is_eligible_flag)
+            message_remarks = ''
             update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
                                                  'PROCEED', message_remarks)
             print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         else:
             print('is eligible not none', is_eligible_flag)
-            update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Rejected', message_remarks,
-                                                 'PROCEED', message_remarks)
-            print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
+            if(is_eligible_flag != '0'):
+                message_remarks = fetch_dedupe_info.get('message')
+                update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Complete', message_remarks,
+                                                     'PROCEED', message_remarks)
+                print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
+            else:
+                message_remarks = fetch_dedupe_info.get('message')
+                update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Rejected',
+                                                     message_remarks,
+                                                     'PROCEED', message_remarks)
+                print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # Posting the loan id to the Perdix API
         # Fake loan id
         # sm_loan_id = 287

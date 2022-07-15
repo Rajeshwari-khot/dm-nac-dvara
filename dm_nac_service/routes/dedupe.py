@@ -32,7 +32,9 @@ async def find_dedupe(
         raw_dedupe = await database.fetch_one(select_query)
         dedupe_dict = {
             "dedupeRefId": raw_dedupe[1],
+            "isDedupePresent": raw_dedupe[12],
             "isEligible": raw_dedupe[18],
+
             # "isEl1igible": "True",
             "message": raw_dedupe[19]
         }
