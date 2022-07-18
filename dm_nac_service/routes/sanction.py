@@ -324,27 +324,29 @@ async def fileupload_sanction(
 
 
 @router.get("/sanction-status", tags=["Sanction"])
-async def get_sanction(
+async def sanction_status(
         customer_id: str, database: Database = Depends(get_database)
 ):
     try:
         get_sanction_response = await nac_get_sanction('status', customer_id)
+        print('RESPONSE GET SANCTION RESPONSE ', get_sanction_response)
         status = get_sanction_response['content']['value']['status']
         stage = get_sanction_response['content']['value']['stage']
-        rejectReason = get_sanction_response['content']['value']['rejectReason']
+        # rejectReason = get_sanction_response.get('content').get('value')['rejectReason']
+        # rejectReason = get_sanction_response['content']['value']['rejectReason']
         bureauFetchStatus = get_sanction_response['content']['value']['bureauFetchStatus']
-        select_query = sanction.select().where(sanction.c.customer_id == customer_id)
-        raw_get_customer = await database.fetch_one(select_query)
-        if raw_get_customer is None:
-            return None
-        else:
-            query = sanction.update().where(sanction.c.customer_id == customer_id).values(status=status,
-                                                                                                 stage=stage,
-                                                                                                 reject_reason=rejectReason,
-                                                                                                 bureau_fetch_status=bureauFetchStatus)
-            customer_updated = await database.execute(query)
-            return customer_updated
-        print('get-sanction ', raw_get_customer)
+        # select_query = sanction.select().where(sanction.c.customer_id == customer_id)
+        # raw_get_customer = await database.fetch_one(select_query)
+        # if raw_get_customer is None:
+        #     return None
+        # else:
+        #     query = sanction.update().where(sanction.c.customer_id == customer_id).values(status=status,
+        #                                                                                          stage=stage,
+        #                                                                                          # reject_reason=rejectReason,
+        #                                                                                          bureau_fetch_status=bureauFetchStatus)
+        #     customer_updated = await database.execute(query)
+        #     return customer_updated
+        # print('get-sanction ', raw_get_customer)
         result = get_sanction_response
     except Exception as e:
         result = JSONResponse(status_code=500,

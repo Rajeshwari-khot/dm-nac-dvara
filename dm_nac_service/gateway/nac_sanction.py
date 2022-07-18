@@ -1,5 +1,6 @@
 from datetime import datetime
 import requests
+import time
 from dm_nac_service.resource.generics import response_to_dict
 from fastapi.responses import JSONResponse
 from dm_nac_service.data.database import insert_logs
@@ -94,6 +95,7 @@ async def nac_sanction_fileupload(context, data):
 
 async def nac_get_sanction(context, customer_id):
     try:
+
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
         group_key = get_env_or_fail(NAC_SERVER, 'group-key', NAC_SERVER + ' group-key not configured')
@@ -111,9 +113,10 @@ async def nac_get_sanction(context, customer_id):
             "Connection": "keep-alive",
             "accept": "*/*"
         }
-        print('nac sanction url', url)
+        # print('nac sanction url', url)
         sanction_get_response = requests.get(url, headers=headers)
-        print('response from get sanction gateway ', sanction_get_response.content)
+        # time.sleep(5)
+        # print('response from get sanction gateway ', sanction_get_response.content)
         sanction_get_response_dict = response_to_dict(sanction_get_response)
         print('response from get sanction gateway ', sanction_get_response_dict)
         str_url = str(url)

@@ -1,13 +1,18 @@
 import json
+import urllib.request
+from collections import defaultdict
 from datetime import datetime
 from fastapi import APIRouter, Depends, status, Request, Response, Body
 from fastapi.responses import JSONResponse
 from dm_nac_service.routes.dedupe import create_dedupe, find_dedupe
 from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
 from dm_nac_service.gateway.nac_perdix_automator import perdix_post_login, perdix_fetch_loan, perdix_update_loan
-from dm_nac_service.gateway.nac_sanction import nac_sanction
-from dm_nac_service.routes.sanction import create_sanction, find_sanction
+from dm_nac_service.gateway.nac_sanction import nac_sanction, nac_get_sanction
+from dm_nac_service.routes.sanction import create_sanction, find_sanction, sanction_status
 from dm_nac_service.resource.generics import response_to_dict
+from dm_nac_service.data.sanction_model import sanction
+
+from dm_nac_service.app_responses.sanction import sanction_response_rejected_server, sanction_response_eligible, sanction_response_rejected_bureau, sanction_response_rejected_bre
 
 router = APIRouter()
 
@@ -452,3 +457,166 @@ async def update_loan(
 
     return result
 
+
+@router.post("/sanction/upload-document", tags=["Perdix"])
+def document_upload(settings, url, document_info, image_id):
+    file_url = settings.file_stream_url + image_id
+    tmp_file = "/tmp/" + image_id + ".jpg"
+    urllib.request.urlretrieve(file_url, tmp_file)
+
+    with open(tmp_file, "rb") as file_handle:
+        files = {"file": file_handle}
+        document_response = requests.post(
+            url,
+            auth=HTTPBasicAuth(settings.username, settings.password),
+            data=document_info,
+            files=files,
+        )
+        return document_response
+
+
+@router.post("/sanction/update-sanction-in-db", tags=["Perdix"])
+async def update_sanction_in_db():
+    try:
+        # settings_dict = await get_settings()
+        # for items in settings_dict:
+        #     iterations_count = items[2]
+        #     records_count = items[1]
+        customer_array = []
+        database = get_database()
+        print('coming inside get_pending_sanctions ')
+        # query = sanction.select().where(and_(perdix_customer.c.pending.is_(True), perdix_customer.c.iterations<=iterations_count))
+        query = sanction.select()
+        service_sanction_array = await database.fetch_all(query)
+        print('get_pending_sanctions ', service_sanction_array)
+        array_length = len(service_sanction_array)
+        sanction_array = service_sanction_array
+        # # for index in range(len(sanction_array)):
+        # #     for key in sanction_array[index]:
+        # #         print(sanction_array[index][key])
+        #
+        # # for dict_item in sanction_array:
+        # #     for key in dict_item:
+        # #         print(dict_item[key])
+        # collect = defaultdict(dict)
+        # for key in sanction_array:
+        #     collect[key['Name']] = key['customer_id']
+        #
+        # print(dict(collect))
+
+        for i in sanction_array:
+            print(i[1])
+            customer_id = i[1]
+            response_sanction_status = await nac_get_sanction('status', i[1])
+
+            # Rejected Scenario
+            # response_sanction_status = sanction_response_rejected_server
+
+            # Sanction Reference ID Scenario
+            # response_sanction_status = sanction_response_eligible
+
+            # Sanction Reference ID Reject Reason
+            # response_sanction_status = sanction_response_rejected_bre
+
+            # Sanction Reference ID Scenario
+            # response_sanction_status = sanction_response_rejected_bureau
+
+            sanction_status = response_sanction_status['content']['status']
+
+            if(sanction_status == 'SUCCESS'):
+                sanction_status_value = response_sanction_status['content']['value']
+                sanction_status_value_status = response_sanction_status['content']['value']['status']
+                if(sanction_status_value_status == 'ELIGIBLE'):
+                    sanction_status_value_reference_id = response_sanction_status['content']['value']['sanctionReferenceId']
+                    sanction_status_value_bureau_fetch = response_sanction_status['content']['value']['bureauFetchStatus']
+                    print('coming here', sanction_status_value_reference_id , sanction_status_value_bureau_fetch)
+                    query = sanction.update().where(sanction.c.customer_id == customer_id).values(
+                        status=sanction_status_value_status,
+                        # stage=sanction_status_value_stage,
+                        sanctin_ref_id=sanction_status_value_reference_id,
+                        bureau_fetch_status=sanction_status_value_bureau_fetch)
+                    sanction_updated = await database.execute(query)
+                elif(sanction_status_value_status == 'REJECTED'):
+
+                    sanction_status_value_stage = response_sanction_status['content']['value'][
+                        'stage']
+                    sanction_status_value_bureau_fetch = response_sanction_status['content']['value'][
+                        'bureauFetchStatus']
+                    if(sanction_status_value_stage == 'BUREAU_FETCH'):
+                        print('coming here')
+
+                        query = sanction.update().where(sanction.c.customer_id == customer_id).values(
+                            status=sanction_status_value_status,
+                            stage=sanction_status_value_stage,
+                            bureau_fetch_status=sanction_status_value_bureau_fetch)
+                        sanction_updated = await database.execute(query)
+                    else:
+
+                        sanction_status_value_reject_reason = str(response_sanction_status['content']['value'][
+                            'rejectReason'])
+                        print(sanction_status_value_reject_reason)
+                        query = sanction.update().where(sanction.c.customer_id == customer_id).values(
+                            status=sanction_status_value_status,
+                            stage=sanction_status_value_stage,
+                            reject_reason=sanction_status_value_reject_reason,
+                            bureau_fetch_status=sanction_status_value_bureau_fetch)
+                        sanction_updated = await database.execute(query)
+                else:
+                    sanction_status_value_stage = response_sanction_status['content']['value'][
+                        'stage']
+                    sanction_status_value_bureau_fetch = response_sanction_status['content']['value'][
+                        'bureauFetchStatus']
+                    query = sanction.update().where(sanction.c.customer_id == customer_id).values(status=sanction_status_value_status,
+                                                                                          stage=sanction_status_value_stage,
+                                                                                          # reject_reason=rejectReason,
+                                                                                          bureau_fetch_status=sanction_status_value_bureau_fetch)
+                    sanction_updated = await database.execute(query)
+            # return customer_updated
+
+            # print(response_sanction_status)
+            # print(sanction_status_value)
+
+
+        # print(sanction_array)
+
+        # if records_count >= array_length:
+        #     customer_array = perdix_customer_array
+        # else:
+        #     customer_array = perdix_customer_array[:records_count]
+        # return customer_array
+        return sanction_array
+    except Exception as e:
+        log_id = await insert_logs('MYSQL', 'DB', 'GET-PENDING-CUSTOMERS', '500', {e.args[0]},
+                                   datetime.now())
+        result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})
+
+
+# @router.post("/nac-sanction-status", status_code=status.HTTP_200_OK, tags=["Perdix"])
+# async def pending_mandate_status(x_token: str = Depends(get_token_header), database: Database = Depends(get_database)
+#                                  ):
+#     try:
+#         # perdix_customer_array = await get_pending_customers()
+#         # for items in perdix_customer_array:
+#             # update_perdix_customer = await update_perdix_status(items[1], items[6], items[11], 'fake-super-secret-token')
+#
+#         result = {"Success": "Mandates Updated"}
+#     except Exception as e:
+#         log_id = await insert_logs('MYSQL', 'DB', 'UPDATE-SOURCE-STATUS', '500', {e.args[0]},
+#                                    datetime.now())
+#         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})
+#     return result
+
+
+# async def update_pending_customers(src_id, mandate_id, mandate_status, customer_id):
+#     try:
+#         database = get_database()
+#         query = perdix_customer.update().where(perdix_customer.c.source_id == src_id).values(mandate_id=mandate_id,
+#                                                                                              mandate_status=mandate_status,
+#                                                                                              lotuspay_customer_id=customer_id,
+#                                                                                              pending=0)
+#         customer_updated = await database.execute(query)
+#         return customer_updated
+#     except Exception as e:
+#         log_id = await insert_logs('MYSQL', 'DB', 'UPDATE-PENDING-CUSTOMERS', '500', {e.args[0]},
+#                                    datetime.now())
+#         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})
