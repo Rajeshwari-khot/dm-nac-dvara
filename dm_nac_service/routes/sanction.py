@@ -307,8 +307,7 @@ async def fileupload_sanction(
             file_upload_response = requests.post(url, files=file_dict)
             print('file_upload_response ', file_upload_response.status_code)
             print('file_upload_response ', file_upload_response.content)
-            log_id = await insert_logs(url, 'NAC', str(file_dict), file_upload_response.status_code,
-                                       file_upload_response.content, datetime.now())
+
 
             # Fake Response for file upload
             # file_upload_response = sanction_file_upload_response1
@@ -332,6 +331,8 @@ async def fileupload_sanction(
                 print('query', insert_query)
         # str_url = str(url)
         # str_data = data.dict()
+        log_id = await insert_logs(str(url), 'NAC', str(file_dict), file_upload_response.status_code,
+                                   file_upload_response.content, datetime.now())
         result = {"customer_id": customer_id, "file_size": file, "choice": file_type}
     except Exception as e:
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
