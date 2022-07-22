@@ -301,6 +301,7 @@ async def fileupload_sanction(
             else:
                 shutil.move('test', file_path)
                 # shutil.move(image_id, file_path)
+        print('before opening the file')
         with open(file_path + '/' + file_name, 'rb') as a_file:
             print('printing file name ', a_file)
             file_dict = {"file_to_upload.txt": a_file}
