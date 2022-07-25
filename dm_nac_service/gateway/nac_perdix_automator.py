@@ -2,11 +2,11 @@ import requests
 import json
 from datetime import datetime
 
-from dm_nac_service.resource.generics import response_to_dict
+from resource.generics import response_to_dict
 from fastapi.responses import JSONResponse
-from dm_nac_service.data.database import insert_logs
+from data.database import insert_logs
 # from gateway.lotuspay_source import lotus_pay_post_source5
-from dm_nac_service.commons import get_env_or_fail
+from commons import get_env_or_fail
 
 
 PERDIX_SERVER = 'perdix-server'
