@@ -12,13 +12,13 @@ from databases import Database
 from fastapi.exceptions import HTTPException
 
 
-from gateway.nac_collect import nac_collect
-from data.database import get_database, sqlalchemy_engine, insert_logs
+from dm_nac_service.gateway.nac_collect import nac_collect
+from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
 
-from app_responses.collect import collect_request, collect_response
+from dm_nac_service.app_responses.collect import collect_request, collect_response
 
 
-from data.collect_model import (
+from dm_nac_service.data.collect_model import (
     collect,
     CollectDB,
     CollectBase,

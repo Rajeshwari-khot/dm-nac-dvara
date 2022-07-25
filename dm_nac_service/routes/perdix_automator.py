@@ -1,25 +1,23 @@
 import json
 import urllib.request
 from collections import defaultdict
-import requests
-from requests.auth import HTTPBasicAuth
 from datetime import datetime
 from fastapi import APIRouter, Depends, status, Request, Response, Body
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from routes.dedupe import create_dedupe, find_dedupe
-from data.database import get_database, sqlalchemy_engine, insert_logs
-from gateway.nac_perdix_automator import perdix_post_login, perdix_fetch_loan, perdix_update_loan
-from gateway.nac_sanction import nac_sanction, nac_get_sanction
-from routes.sanction import create_sanction, find_sanction, sanction_status, find_loan_id_from_sanction
-from resource.generics import response_to_dict
-from data.sanction_model import sanction
-from commons import get_env_or_fail
-from app_responses.sanction import sanction_response_rejected_server, sanction_response_eligible, sanction_response_rejected_bureau, sanction_response_rejected_bre
-from routes.disbursement import find_customer_sanction, create_disbursement
-from gateway.nac_disbursement import nac_disbursement, disbursement_get_status
-from data.disbursement_model import (disbursement)
-from data.sanction_model import (sanction)
+from dm_nac_service.routes.dedupe import create_dedupe, find_dedupe
+from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
+from dm_nac_service.gateway.nac_perdix_automator import perdix_post_login, perdix_fetch_loan, perdix_update_loan
+from dm_nac_service.gateway.nac_sanction import nac_sanction, nac_get_sanction
+from dm_nac_service.routes.sanction import create_sanction, find_sanction, sanction_status, find_loan_id_from_sanction
+from dm_nac_service.resource.generics import response_to_dict
+from dm_nac_service.data.sanction_model import sanction
+from dm_nac_service.commons import get_env_or_fail
+from dm_nac_service.app_responses.sanction import sanction_response_rejected_server, sanction_response_eligible, sanction_response_rejected_bureau, sanction_response_rejected_bre
+from dm_nac_service.routes.disbursement import find_customer_sanction, create_disbursement
+from dm_nac_service.gateway.nac_disbursement import nac_disbursement, disbursement_get_status
+from dm_nac_service.data.disbursement_model import (disbursement)
+from dm_nac_service.data.sanction_model import (sanction)
 router = APIRouter()
 
 
@@ -86,7 +84,7 @@ async def post_automator_data(
                         "value": udhyog_aadhar
                     }
                 ],
-                "loanId": str(sm_loan_id),
+                # "loanId": str(sm_loan_id),
                 "pincode": pincode,
             }
 
@@ -105,12 +103,12 @@ async def post_automator_data(
             print('13 - extracting loan information from Perdix', fetch_dedupe_info)
 
             # Condition to check the success and failure case
-            
+            # sm_loan_id = 287
             is_dedupe_present = fetch_dedupe_info.get('isDedupePresent', '')
             is_eligible_flag = fetch_dedupe_info.get('isEligible', '')
             str_fetch_dedupe_info = fetch_dedupe_info.get('dedupeRefId', '')
 
-            
+            # print('priting dedupe reference id ', str_fetch_dedupe_info)
             if (is_dedupe_present == 'False'):
                 print('is eligible none', is_eligible_flag)
                 message_remarks = ''
@@ -176,13 +174,18 @@ async def post_sanction_automator_data(
 ):
     """Function which prepares user data and posts"""
     try:
-        
+        # print("coming inside prepare sanction data")
         # payload = await request_info.json()
 
         # Below is for data published manually
         payload = request_info
 
-        
+        # Get Dedupe Reference ID
+        # sm_loan_id = 287
+        # print('before loan fetch')
+        # fetch_dedupe_info = await find_dedupe(sm_loan_id)
+        # dedupe_reference_id = "5134610851082868"
+        # print(fetch_dedupe_info)
 
 
         customer_data = payload["enrollmentDTO"]["customer"]
@@ -225,7 +228,7 @@ async def post_sanction_automator_data(
         curr_locality = customer_data.get("locality", "bangalore")
         landmark = customer_data.get("","banashankari circle")
         curr_district = customer_data.get("district","bangalore")
-        
+        # curr_city=customer_data.get("","bangalore")
         curr_state = customer_data.get("state","Karnataka")
         occupation_info = {}
 
@@ -332,7 +335,7 @@ async def post_sanction_automator_data(
                 "primaryBankAccount": account_number,
                 "bankName": customer_bank_name,
                 "modeOfSalary": mode_salary,
-               
+                # "dedupeReferenceId": dedupe_reference_id,
                 "email": email_id,
                 "middleName": middle_name,
                 "maritalStatus": maritual_status,
@@ -360,7 +363,9 @@ async def post_sanction_automator_data(
         # print('14 - updated loan information with dedupe reference to Perdix', update_loan_info)
         # update_loan_info = await update_loan(sm_loan_id, str_fetch_dedupe_info, 'Dedupe', message_remarks,
         #                                      'PROCEED', message_remarks)
-       
+        # print('0 - testing', sanction_response)
+        # print('1 - Prepare Data to push to NAC endpoint', sanction_data)
+        # return sanction_data
 
         return payload
     except Exception as e:
@@ -440,7 +445,43 @@ async def post_disbursement_automator_data(
                                                  'PROCEED', disbursement_message)
 
 
-        
+        # disbursement_response_message = nac_disbursement_response['content']['message']
+        # disbursement_response_status = nac_disbursement_response['content']['status']
+        # if (disbursement_response_status == 'SUCCESS'):
+        #     disbursement_info['message'] = disbursement_response_message
+        #     disbursement_info['status'] = disbursement_response_status
+        #     disbursement_info['disbursement_reference_id'] = nac_disbursement_response['content']['value'][
+        #         'disbursementReferenceId']
+        #     disbursement_ref_id = nac_disbursement_response['content']['value'][
+        #         'disbursementReferenceId']
+        #     disbursement_db_info['message'] = disbursement_response_message
+        #     disbursement_db_info['status'] = disbursement_response_status
+        #     disbursement_db_info['disbursement_reference_id'] = nac_disbursement_response['content']['value'][
+        #         'disbursementReferenceId']
+        #     payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+        #     payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_ref_id
+        #
+        #     insert_query = disbursement.insert().values(disbursement_db_info)
+        #     # print('query', insert_query)
+        #     disbursement_id = await database.execute(insert_query)
+        # else:
+        #     disbursement_info['message'] = disbursement_response_message
+        #     disbursement_info['status'] = disbursement_response_status
+
+        # get_sanction_from_db = await get_sanction_or_404(sanction_reference_id)
+        # print('get_disbursement_from_db', get_disbursement_from_db)
+
+        # if (get_sanction_from_db is None):
+        #     insert_query = disbursement.insert().values(disbursement_info)
+        #     # print('query', insert_query)
+        #     disbursement_id = await database.execute(insert_query)
+        # else:
+        #     result = JSONResponse(status_code=500, content={"message": f"{sanction_reference_id} is already present"})
+
+
+
+
+        # result = {"function": "nac-disbursement-automator-data"}
         return payload
     except Exception as e:
         print(e)
@@ -449,9 +490,9 @@ async def post_disbursement_automator_data(
 @router.get("/perdix/{loan_id}", status_code=status.HTTP_200_OK, tags=["Perdix"])
 async def get_loan(loan_id):
     result = await perdix_post_login()
-    
+    # print(result)
     get_perdix_loan_data = await perdix_fetch_loan(loan_id)
-    
+    # print('getting customer', get_perdix_data)
 
     return get_perdix_loan_data
 
@@ -472,18 +513,26 @@ async def update_loan(
     loan_process_action: str,
     remarks: str
 ):
-    
+    # result = loan_info
+
     #  For testing manually
-   
+    # loan_update_response = await perdix_update_loan(loan_info)
+    # result = loan_update_response
 
     # For Real updating the loan information
     get_loan_info = await perdix_fetch_loan(loan_id)
-    
+    # print('get loan info', get_loan_info)
+    # print('Reject Reason - ', get_loan_info.get('loanAccount').get('rejectReason'))
+    # print('Stage - ', get_loan_info.get('stage'))
+    # print('Remarks - ', get_loan_info.get('remarks'))
+    # print('loanProcessAction - ', get_loan_info.get('loanProcessAction'))
+    # print('udf41 - ', get_loan_info.get('accountUserDefinedFields').get('userDefinedFieldValues').get('udf41'))
     json_data_version = get_loan_info.get('version')
-    
+    # print('printing version of data ', json_data_version)
     if "rejectReason" in get_loan_info:
         get_loan_info['rejectReason'] = reject_reason
-    
+    # if "stage" in get_loan_info:
+    #     get_loan_info['stage'] = "Testing stage"
     get_loan_info['stage'] = stage
     if "remarks1" in get_loan_info:
         get_loan_info['remarks1'] = "Testing remarks1"
@@ -491,26 +540,83 @@ async def update_loan(
         get_loan_info['loanProcessAction'] = "Testing loanProcessAction"
     if "accountUserDefinedFields" in get_loan_info:
         if(url_type == 'DEDUPE'):
-            
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf41': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf41': reference_id
+            #     }
+            # }
             get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf41'] = reference_id
 
-            
+            # print('dedupe', get_loan_info)
         if(url_type == 'SANCTION'):
-            
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf42': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf42': reference_id
+            #     }
+            # }
             get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf42'] = reference_id
-            
+            # print('sanction', get_loan_info)
         if(url_type == 'SANCTION-REFERENCE'):
-            
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf42': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf42': reference_id
+            #     }
+            # }
             get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf43'] = reference_id
-            
+            # print('sanction', get_loan_info)
         if(url_type == 'DISBURSEMENT'):
-           
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf42': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf42': reference_id
+            #     }
+            # }
             get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf44'] = reference_id
-           
+            # print('sanction', get_loan_info)
         if (url_type == 'DISBURSEMENT-ITR'):
-
+            # get_loan_info['accountUserDefinedFields']['userDefinedFieldValues'] = {
+            #     'udf42': reference_id
+            #     # 'udf42': "5211201547885960"
+            #     # 'udf43': "5211201547885960"
+            #     # 'udf44': "5211201547885960"
+            #     # 'udf45': "5211201547885960"
+            # }
+            # get_loan_info['accountUserDefinedFields'] = {
+            #     'userDefinedFieldValues': {
+            #         'udf42': reference_id
+            #     }
+            # }
             get_loan_info['accountUserDefinedFields']['userDefinedFieldValues']['udf45'] = reference_id
-            
+            # print('sanction', get_loan_info)
+    # if "version" in get_loan_info:
+    #     get_loan_info['version'] = json_data_version + 2
 
     prepare_loan_info = {
         "loanAccount": get_loan_info,
@@ -520,13 +626,21 @@ async def update_loan(
     }
     print('prepare_loan_info - ', prepare_loan_info)
     update_perdix_loan = await perdix_update_loan(prepare_loan_info)
-    
+    # update_perdix_loan_dict = response_to_dict(update_perdix_loan)
+    # update_perdix_loan_dict = json.loads(update_perdix_loan.decode('utf-8'))
+    # print('coming after gateway ', update_perdix_loan)
 
 
-    
+    # loan_update_response = await perdix_update_loan(loan_id)
+
+    # result = get_loan_info
     result = update_perdix_loan
 
-    
+    # print('loan status code ', loan_update_response.status_code)
+    # print('loan status content ')
+    # print(result)
+    # get_perdix_loan_data = await perdix_fetch_loan(loan_id)
+    # print('getting customer', get_perdix_data)
 
     return result
 
@@ -551,24 +665,42 @@ def document_upload(settings, url, document_info, image_id):
 @router.post("/sanction/update-sanction-in-db", tags=["Perdix"])
 async def update_sanction_in_db():
     try:
-        
+        # settings_dict = await get_settings()
+        # for items in settings_dict:
+        #     iterations_count = items[2]
+        #     records_count = items[1]
         customer_array = []
         database = get_database()
         print('coming inside get_pending_sanctions ')
-       
+        # query = sanction.select().where(and_(perdix_customer.c.pending.is_(True), perdix_customer.c.iterations<=iterations_count))
         query = sanction.select()
         service_sanction_array = await database.fetch_all(query)
         print('get_pending_sanctions ', service_sanction_array)
         array_length = len(service_sanction_array)
         sanction_array = service_sanction_array
-       
+        # # for index in range(len(sanction_array)):
+        # #     for key in sanction_array[index]:
+        # #         print(sanction_array[index][key])
+        #
+        # # for dict_item in sanction_array:
+        # #     for key in dict_item:
+        # #         print(dict_item[key])
+        # collect = defaultdict(dict)
+        # for key in sanction_array:
+        #     collect[key['Name']] = key['customer_id']
+        #
+        # print(dict(collect))
 
         for i in sanction_array:
             print(i[1])
             customer_id = i[1]
             sm_loan_id = i[61]
             print('loan ID is ', sm_loan_id)
-            
+            # response_sanction_status = await nac_get_sanction('status', i[1])
+
+            # Rejected Scenario
+            # response_sanction_status = sanction_response_rejected_server
+
             # Sanction Reference ID Scenario
             response_sanction_status = sanction_response_eligible
 
@@ -591,7 +723,7 @@ async def update_sanction_in_db():
                     print('coming here', sanction_status_value_reference_id , sanction_status_value_bureau_fetch)
                     query = sanction.update().where(sanction.c.customer_id == customer_id).values(
                         status=sanction_status_value_status,
-                        
+                        # stage=sanction_status_value_stage,
                         sanctin_ref_id=sanction_status_value_reference_id,
                         bureau_fetch_status=sanction_status_value_bureau_fetch)
                     sanction_updated = await database.execute(query)
@@ -648,7 +780,19 @@ async def update_sanction_in_db():
                                                          'PROCEED', sanction_status_value_bureau_fetch)
 
 
-            
+            # return customer_updated
+
+            # print(response_sanction_status)
+            # print(sanction_status_value)
+
+
+        # print(sanction_array)
+
+        # if records_count >= array_length:
+        #     customer_array = perdix_customer_array
+        # else:
+        #     customer_array = perdix_customer_array[:records_count]
+        # return customer_array
         return sanction_array
     except Exception as e:
         log_id = await insert_logs('MYSQL', 'DB', 'GET-PENDING-CUSTOMERS', '500', {e.args[0]},
@@ -662,7 +806,7 @@ async def update_disbursement_in_db():
     try:
         database = get_database()
         print('coming inside update_disbursement_in_db ')
-        
+        # query = sanction.select().where(and_(perdix_customer.c.pending.is_(True), perdix_customer.c.iterations<=iterations_count))
         query = disbursement.select()
         service_disbursement_array = await database.fetch_all(query)
         print('get_pending_sanctions ', service_disbursement_array)
@@ -670,15 +814,16 @@ async def update_disbursement_in_db():
         disbursement_array = service_disbursement_array
         result = {"function": "update_disbursement_in_db"}
         for i in disbursement_array:
-           
+            # print(i[1])
             disbursement_ref_id = i[1]
             sanction_ref_id = i[8]
-            
+            # query = sanction.select().where(sanction.c.sanctin_ref_id == sanction_ref_id)
+            # disbursement_sanction_id = await database.fetch_one(query)
             disbursement_sanction_id = await find_loan_id_from_sanction(sanction_ref_id)
             disb_sanc_data = disbursement_sanction_id
             print('loan id from disbursement', disb_sanc_data.get('loanID'), sanction_ref_id)
             sm_loan_id = disb_sanc_data.get('loanID')
-            
+            # print('disbursement_ref_id ID is ', disbursement_ref_id)
             get_disbursement_response = await disbursement_get_status('disbursement', disbursement_ref_id)
             print('disbursement response ', get_disbursement_response)
             get_disbursement_response_content = get_disbursement_response['content']
@@ -743,6 +888,32 @@ async def update_disbursement_in_db():
         log_id = await insert_logs('MYSQL', 'DB', 'GET-PENDING-CUSTOMERS', '500', {e.args[0]},
                                    datetime.now())
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})
+# @router.post("/nac-sanction-status", status_code=status.HTTP_200_OK, tags=["Perdix"])
+# async def pending_mandate_status(x_token: str = Depends(get_token_header), database: Database = Depends(get_database)
+#                                  ):
+#     try:
+#         # perdix_customer_array = await get_pending_customers()
+#         # for items in perdix_customer_array:
+#             # update_perdix_customer = await update_perdix_status(items[1], items[6], items[11], 'fake-super-secret-token')
+#
+#         result = {"Success": "Mandates Updated"}
+#     except Exception as e:
+#         log_id = await insert_logs('MYSQL', 'DB', 'UPDATE-SOURCE-STATUS', '500', {e.args[0]},
+#                                    datetime.now())
+#         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})
+#     return result
 
 
-
+# async def update_pending_customers(src_id, mandate_id, mandate_status, customer_id):
+#     try:
+#         database = get_database()
+#         query = perdix_customer.update().where(perdix_customer.c.source_id == src_id).values(mandate_id=mandate_id,
+#                                                                                              mandate_status=mandate_status,
+#                                                                                              lotuspay_customer_id=customer_id,
+#                                                                                              pending=0)
+#         customer_updated = await database.execute(query)
+#         return customer_updated
+#     except Exception as e:
+#         log_id = await insert_logs('MYSQL', 'DB', 'UPDATE-PENDING-CUSTOMERS', '500', {e.args[0]},
+#                                    datetime.now())
+#         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at DB level - {e.args[0]}"})

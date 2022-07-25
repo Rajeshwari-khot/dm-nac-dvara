@@ -1,22 +1,23 @@
-
-from fastapi import APIRouter
+import json
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 
+from databases import Database
+from fastapi.exceptions import HTTPException
 
-
-from data.database import get_database, sqlalchemy_engine, insert_logs
-
-from gateway.nac_dedupe import nac_dedupe
-from app_responses.dedupe import dedupe_response_data
-from data.dedupe_model import (
+from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
+from dm_nac_service.resource.generics import tuple_to_dict, array_to_dict
+from dm_nac_service.gateway.nac_dedupe import nac_dedupe
+from dm_nac_service.app_responses.dedupe import dedupe_response_data
+from dm_nac_service.data.dedupe_model import (
     DedupeDB,
     DedupeCreate,
     dedupe
 
 )
-
+# from dm_nac_service.routes.perdix_automator import update_loan
 
 
 router = APIRouter()
@@ -26,26 +27,26 @@ async def find_dedupe(
         loan_id
 ) -> DedupeDB:
     try:
-        
+        # print('selecting loan id')
         database = get_database()
         select_query = dedupe.select().where(dedupe.c.loan_id == loan_id).order_by(dedupe.c.id.desc())
-        
+        # print('loan query', select_query)
         raw_dedupe = await database.fetch_one(select_query)
         dedupe_dict = {
             "dedupeRefId": raw_dedupe[1],
             "isDedupePresent": raw_dedupe[12],
             "isEligible": raw_dedupe[18],
 
-           
+            # "isEl1igible": "True",
             "message": raw_dedupe[19]
         }
         print( '*********************************** SUCCESSFULLY FETCHED DEDUPE REFERENCE ID FROM DB  ***********************************')
-       
+        # result = raw_dedupe[1]
         result = dedupe_dict
         if raw_dedupe is None:
             return None
 
-       
+        # return DedupeDB(**raw_dedupe)
     except Exception as e:
         print(
             '*********************************** FAILURE FETCHING DEDUPE REFERENCE ID FROM DB  ***********************************')
@@ -63,7 +64,7 @@ async def create_dedupe(
 
     #  Data from automator
     automator_data,
-    
+    # database: Database = Depends(get_database)
 
 ) -> DedupeDB:
     try:
@@ -73,11 +74,12 @@ async def create_dedupe(
         dedupe_response = await nac_dedupe('dedupe', automator_data)
         print('7 - Getting the dedupe reference from nac_dedupe function - ', dedupe_response)
         dedupe_response_decode = jsonable_encoder(dedupe_response)
-       
+        # print('7a - Getting the dedupe reference from nac_dedupe function - ', type(dedupe_response_decode))
+        # dedupe_response_decode_dict = dedupe_response_decode.dict()
         print('7a - Getting the dedupe reference from nac_dedupe function - ', dedupe_response_decode.get('status_code'))
         dedupe_response_decode_status = dedupe_response_decode.get('status_code')
 
-        
+        # dedupe_response_status = dedupe_response.get('status_code')
         if(dedupe_response_decode_status == 200):
             print('7b - successfully generated dedupe ref id', )
             # Real API response after passing the dedupe data
@@ -95,7 +97,7 @@ async def create_dedupe(
             # For Fake Resopnse
             # dedupe_response_id = str(dedupe_response[0]['dedupeReferenceId'])
 
-           
+            # print('dedupe reference id', dedupe_response_id)
             # For Real API
             kycdetails_array = dedupe_response.get('dedupeRequestSource').get('kycDetailsList')
 
@@ -201,7 +203,7 @@ async def create_dedupe(
                 }
 
             print('10 - preparing Dedupe data to store in DB - ', dedupue_info)
-           
+            # print('before dedupe_info', dedupe_response['dedupeRequestSource']['dateOfBirth'])
 
             # For Fake Response
             # dedupue_info = {
@@ -238,7 +240,7 @@ async def create_dedupe(
             print('query', insert_query)
             dedupe_id = await database.execute(insert_query)
             print('11 - Response of the data after storing in DB - ', dedupe_id)
-           
+            # update_loan_info = update_loan(loan_id, dedupe_response_id)
             result = JSONResponse(status_code=200, content=dedupe_response)
 
             # Fake API response from pdf file

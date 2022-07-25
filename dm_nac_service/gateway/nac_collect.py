@@ -2,12 +2,12 @@ import json
 import requests
 
 from datetime import datetime
-from resource.generics import response_to_dict
+from dm_nac_service.resource.generics import response_to_dict
 from fastapi.responses import JSONResponse
-from data.database import insert_logs
-from commons import get_env_or_fail
-from resource.generics import response_to_dict
-from app_responses.disbursement import disbursement_request_success_response, disbursement_request_error_response1, disbursement_request_error_response2, disbursement_request_error_response3, disbursement_status_success_response1, disbursement_status_success_response2, disbursement_status_error_response1, disbursement_status_error_response2, disbursement_status_error_response3
+from dm_nac_service.data.database import insert_logs
+from dm_nac_service.commons import get_env_or_fail
+from dm_nac_service.resource.generics import response_to_dict
+from dm_nac_service.app_responses.disbursement import disbursement_request_success_response, disbursement_request_error_response1, disbursement_request_error_response2, disbursement_request_error_response3, disbursement_status_success_response1, disbursement_status_success_response2, disbursement_status_error_response1, disbursement_status_error_response2, disbursement_status_error_response3
 
 
 NAC_SERVER = 'northernarc-server'

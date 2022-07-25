@@ -1,11 +1,11 @@
 from datetime import datetime
 import requests
 import time
-from resource.generics import response_to_dict
+from dm_nac_service.resource.generics import response_to_dict
 from fastapi.responses import JSONResponse
-from data.database import insert_logs
-from commons import get_env_or_fail
-from resource.generics import response_to_dict
+from dm_nac_service.data.database import insert_logs
+from dm_nac_service.commons import get_env_or_fail
+from dm_nac_service.resource.generics import response_to_dict
 import json
 
 NAC_SERVER = 'northernarc-server'

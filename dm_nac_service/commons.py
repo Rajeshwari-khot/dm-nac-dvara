@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 
 env = ConfigParser()
-env.read('resource/env.ini')
+env.read('dm_nac_service/resource/env.ini')
 
 print(env)
 

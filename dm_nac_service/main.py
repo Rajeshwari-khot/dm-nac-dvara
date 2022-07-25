@@ -4,20 +4,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi_utils.tasks import repeat_every
 # Data
-from data.database import get_database, sqlalchemy_engine
-from data.dedupe_model import dedupe_metadata
-from data.sanction_model import (sanction_metadata)
-from data.disbursement_model import disbursement_metadata
-from data.collect_model import collect_metadata
+from dm_nac_service.data.database import get_database, sqlalchemy_engine
+from dm_nac_service.data.dedupe_model import dedupe_metadata
+from dm_nac_service.data.sanction_model import (sanction_metadata)
+from dm_nac_service.data.disbursement_model import disbursement_metadata
+from dm_nac_service.data.collect_model import collect_metadata
 
 # Router
-from data.logs_model import (logs_metadata)
-from routes.dedupe import router as dedupte_router
-from routes.sanction import router as sanction_router
-from routes.disbursement import router as disbursement_router
-from routes.collect import router as collect_router
-from routes.perdix_automator import router as perdix_router, update_sanction_in_db
-from commons import get_env_or_fail
+from dm_nac_service.data.logs_model import (logs_metadata)
+from dm_nac_service.routes.dedupe import router as dedupte_router
+from dm_nac_service.routes.sanction import router as sanction_router
+from dm_nac_service.routes.disbursement import router as disbursement_router
+from dm_nac_service.routes.collect import router as collect_router
+from dm_nac_service.routes.perdix_automator import router as perdix_router, update_sanction_in_db
+from dm_nac_service.commons import get_env_or_fail
 
 origins = ["*"]
 
@@ -37,7 +37,7 @@ app = FastAPI(title="DM-NAC",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },)
 
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
