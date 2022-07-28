@@ -366,6 +366,7 @@ async def post_sanction_automator_data(
         sanction_response = await create_sanction(sanction_data)
         sanction_response_status = hanlde_response_status(sanction_response)
         sanction_response_body = hanlde_response_body(sanction_response)
+        logger.ex
 
         if(sanction_response_status == 200):
 
