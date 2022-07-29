@@ -190,6 +190,7 @@ async def create_sanction(
                     result = JSONResponse(status_code=500, content={"message": f"Issue with Northern Arc API"})
             else:
                 print('CUSTOMER NOT CREATED SUCCFULLY', sanction_response_decode)
+                result = JSONResponse(status_code=500, content=sanction_response_decode)
             print('5 - Response from NAC Sanction Endpoint', sanction_response)
 
         else:

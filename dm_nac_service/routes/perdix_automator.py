@@ -364,7 +364,7 @@ async def post_sanction_automator_data(
         sanction_response = await create_sanction(sanction_data)
         sanction_response_status = hanlde_response_status(sanction_response)
         sanction_response_body = hanlde_response_body(sanction_response)
-        logger.ex
+
 
         if(sanction_response_status == 200):
 
@@ -398,6 +398,9 @@ async def post_sanction_automator_data(
                 payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                 result = payload
         else:
+
+            update_loan_info = await update_loan('SANCTION', sm_loan_id, '', 'Rejected', str(sanction_response_body),
+                                                 'PROCEED', str(sanction_response_body))
             logger.error(f"{datetime.now()} - post_sanction_automator_data - 452 - {sanction_response_body}")
             result = JSONResponse(status_code=500, content=sanction_response_body)
             payload['partnerHandoffIntegration']['status'] = 'FAILURE'
