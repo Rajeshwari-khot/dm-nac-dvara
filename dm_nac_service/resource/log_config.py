@@ -37,6 +37,6 @@ class LogConfig(BaseModel):
 
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("dm-nac-service")
-logfile_handler = logging.FileHandler("dm_nac_service/logs/server.log")
+logfile_handler = logging.FileHandler("logs/server.log")
 logger.addHandler(logfile_handler)
 logger.setLevel(logging.DEBUG)
