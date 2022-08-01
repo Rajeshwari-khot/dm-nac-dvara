@@ -14,12 +14,12 @@
         "description": "",
         "adapterStatusCode": "",
         "adapterStatusDescription": "SUCCESS",
-        "initialData": "{\"id\":310503,\"version\":0,\"loanId\":317,\"urn\":\"2111199294311001\",\"relation\":\"Applicant\",\"customerId\":234865,\"relationshipWithApplicant\":null,\"psychometricRequired\":null,\"psychometricCompleted\":null,\"dscId\":null,\"dscLimitInPaisa\":null,\"dscStatus\":null,\"dscOverrideRemarks\":null,\"dscOverrideRequestRemarks\":null,\"dscOverrideRequestFileId\":null,\"customerSnapshotId\":null,\"teleCallingDetailsSnapshotId\":null}|Monexo"
+        "initialData": "{\"id\":310503,\"version\":0,\"loanId\":287,\"urn\":\"2111199294311001\",\"relation\":\"Applicant\",\"customerId\":234865,\"relationshipWithApplicant\":null,\"psychometricRequired\":null,\"psychometricCompleted\":null,\"dscId\":null,\"dscLimitInPaisa\":null,\"dscStatus\":null,\"dscOverrideRemarks\":null,\"dscOverrideRequestRemarks\":null,\"dscOverrideRequestFileId\":null,\"customerSnapshotId\":null,\"teleCallingDetailsSnapshotId\":null}|Monexo"
     },
     "loanDTO": {
         "loanProcessAction": null,
         "loanAccount": {
-            "id": 317,
+            "id": 287,
             "sm_loan_id": "SML00253001",
             "sm_user_id": "SM000003001",
             "repayment_schedule_json": [
@@ -381,7 +381,7 @@
             "bcAccount": null,
             "loanCentre": {
                 "id": 169274,
-                "loanId": 317,
+                "loanId": 287,
                 "centreId": 3058
             },
             "branchCode": null,
@@ -419,7 +419,7 @@
                     "udf30": "8690271023"
                 },
                 "userDefinedDateFieldValues": {},
-                "loanId": 317
+                "loanId": 287
             },
             "nominees": [
                 {
@@ -468,7 +468,7 @@
                     "guardianAddressSameAsCustomer": null,
                     "guardianGender": null,
                     "nomineeGender": "MALE",
-                    "loanId": 317,
+                    "loanId": 287,
                     "customerId": 234865,
                     "urnNo": "2111199294311001"
                 }
@@ -525,7 +525,7 @@
                         }
                     },
                     "actualDisbursementDate": null,
-                    "disbursementAmount": 20000.00,
+                    "disbursementAmount": 18000.00,
                     "disbursedAmount": null,
                     "customerSignatureDate": {
                         "year": 2021,
@@ -542,7 +542,7 @@
                         }
                     },
                     "currentStage": null,
-                    "loanId": 317,
+                    "loanId": 287,
                     "disbursementFromBankAccountNumber": null,
                     "trancheNumber": "1",
                     "customerAccountNumber": null,
@@ -612,7 +612,7 @@
                 {
                     "id": 310503,
                     "version": 0,
-                    "loanId": 317,
+                    "loanId": 287,
                     "urn": "2111199294311001",
                     "relation": "Applicant",
                     "customerId": 234865,
@@ -631,7 +631,7 @@
                 {
                     "id": 310504,
                     "version": 0,
-                    "loanId": 317,
+                    "loanId": 287,
                     "urn": "2111213506312001",
                     "relation": "Co-Applicant",
                     "customerId": 235824,
@@ -672,7 +672,7 @@
             "loanRuleInfo": {
                 "id": 31850,
                 "version": 2,
-                "loanId": 317,
+                "loanId": 287,
                 "ruleId": 227,
                 "ruleName": "Loan Booking to doc upload",
                 "currentStage": "LoanBooking",
