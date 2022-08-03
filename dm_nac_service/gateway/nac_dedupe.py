@@ -21,7 +21,7 @@ async def nac_dedupe(context, data):
         sector_id = get_env_or_fail(NAC_SERVER, 'sector-id', NAC_SERVER + 'Sector ID not configured')
         url = validate_url + f'/{context}?originatorId={originator_id}&sectorId={sector_id}'
         str_url = str(url)
-        print('3 -  receiving dedupe data from create_dedupe function in gateway', data)
+        
 
         headers = {
             "API-KEY": api_key,
@@ -36,21 +36,20 @@ async def nac_dedupe(context, data):
 
         # Data Prepared using automator Data
         get_root = [data]
-        print('4 -  Prepared and posting data for NAC dedupe api', get_root)
-
+       
         dedupe_context_response = requests.post(url, json=get_root, headers=headers)
-        print('5 - Response from NAC dedupe api ', dedupe_context_response.status_code, dedupe_context_response.content)
+       
         if(dedupe_context_response.status_code == 200):
             log_id = await insert_logs(str_url, 'NAC', str(get_root), dedupe_context_response.status_code,
                                        dedupe_context_response.content, datetime.now())
             response_content = dedupe_context_response.content
             res = json.loads(response_content.decode('utf-8'))
             dedupe_context_response = res[0]
-            print('6 - Sending Back the dedupe reference Id to create_dedupe function', res[0])
+           
             result = JSONResponse(status_code=200, content=dedupe_context_response)
         else:
             dedupe_context_dict = response_to_dict(dedupe_context_response)
-            print('6 - Error in creating dedupe from NAC endpoint', dedupe_context_dict)
+            
             log_id = await insert_logs(str_url, 'NAC', str(get_root), dedupe_context_response.status_code,
                                        dedupe_context_response.content, datetime.now())
 

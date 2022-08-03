@@ -20,7 +20,7 @@ def response_to_dict(response):
 def tuple_to_dict(tup, di):
     try:
         for a, b in tup:
-            print('coming inside tuple to dict')
+            
             di.setdefault(a, []).append(b)
         return di
     except Exception as e:

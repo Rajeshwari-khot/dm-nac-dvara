@@ -1,10 +1,10 @@
-from datetime import datetime
-from typing import Optional, List
+
+from typing import Optional
 from enum import Enum
 
 import sqlalchemy
-from pydantic import BaseModel, Field
-from sqlalchemy.dialects.mysql import LONGTEXT
+from pydantic import BaseModel
+
 
 
 class SanctionDetail(BaseModel):

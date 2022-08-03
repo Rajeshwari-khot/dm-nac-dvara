@@ -1,7 +1,5 @@
 import uvicorn
-# import logging
-# from logging.config import dictConfig
-# from dm_nac_service.resource.log_config import LogConfig
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -20,16 +18,12 @@ from dm_nac_service.routes.dedupe import router as dedupte_router
 from dm_nac_service.routes.sanction import router as sanction_router
 from dm_nac_service.routes.disbursement import router as disbursement_router
 from dm_nac_service.routes.collect import router as collect_router
-from dm_nac_service.routes.perdix_automator import router as perdix_router, update_sanction_in_db
+from dm_nac_service.routes.perdix_automator import router as perdix_router, update_disbursement_in_db, update_sanction_in_db
 from dm_nac_service.commons import get_env_or_fail
 
 origins = ["*"]
 
-# Adding the logger and log file
-# dictConfig(LogConfig().dict())
-# logger = logging.getLogger("dm-nac-service")
-# logfile_handler = logging.FileHandler("dm_nac_service/logs/server.log")
-# logger.addHandler(logfile_handler)
+
 
 app = FastAPI(title="DM-NAC",
               debug=True,
@@ -64,7 +58,7 @@ scheduler_end_in_seconds = get_env_or_fail(SCHEDULER_TIME, 'end-seconds', SCHEDU
 @app.on_event("startup")
 async def startup():
     await get_database().connect()
-    # metadata.create_all(sqlalchemy_engine)
+    
     dedupe_metadata.create_all(sqlalchemy_engine)
     logs_metadata.create_all(sqlalchemy_engine)
     sanction_metadata.create_all(sqlalchemy_engine)
@@ -75,8 +69,8 @@ async def startup():
 @app.on_event("startup")
 @repeat_every(seconds=int(scheduler_start_in_seconds) * int(scheduler_end_in_seconds))  # 1 minute
 async def update_mandate_task() -> str:
-    # update_mandate_status = await pending_mandate_status('fake-super-secret-token')
-    # update_sanction_status = await update_sanction_in_db()
+    # update_sanction_in_db
+    # update_disbursement_in_db
     logger.info('Hello from logger')
     print("Hello World every 5 minutes")
     return "Hello World"
@@ -98,4 +92,3 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8008)
 
 
-# uvicorn example:app --log-config /path/to/log.ini
