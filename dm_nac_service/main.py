@@ -71,9 +71,8 @@ async def startup():
 async def update_mandate_task() -> str:
     # update_sanction_in_db
     # update_disbursement_in_db
-    logger.info('Hello from logger')
-    print("Hello World every 5 minutes")
-    return "Hello World"
+    logger.info('Scheduler is Running')
+    
 
 @app.on_event("shutdown")
 async def shutdown():
