@@ -3,10 +3,7 @@ from databases import Database
 from dm_nac_service.data.logs_model import applogs
 from dm_nac_service.commons import get_env_or_fail
 
-# DATABASE_URL = "sqlite:///chapter6_sqlalchemy.db"
-# DATABASE_URL = "mysql+pymysql://root:Aroha123@localhost/Aroha"
-# DATABASE_URL = "mysql+pymysql://root:Aroha123@172.17.0.2/Aroha"
-# DATABASE_URL = "mysql+pymysql://admin:7f06EX0Tk2vUSMun966j@spicemoney-db-host/lotuspay"
+
 DATABASE_SERVER = 'database-server'
 
 DATABASE_URL = get_env_or_fail(DATABASE_SERVER, 'database-url', DATABASE_SERVER + 'database-url not configured')

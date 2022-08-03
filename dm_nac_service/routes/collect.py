@@ -1,27 +1,21 @@
-import random
-import re
-import shutil
 
-import requests
-import os
 
-from fastapi import APIRouter, Depends, status, File, UploadFile, Form, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from databases import Database
-from fastapi.exceptions import HTTPException
+
 
 
 from dm_nac_service.gateway.nac_collect import nac_collect
-from dm_nac_service.data.database import get_database, sqlalchemy_engine, insert_logs
+from dm_nac_service.data.database import get_database, insert_logs
 
-from dm_nac_service.app_responses.collect import collect_request, collect_response
+
 
 
 from dm_nac_service.data.collect_model import (
     collect,
-    CollectDB,
-    CollectBase,
+    
     CreateCollect
 )
 
@@ -54,7 +48,7 @@ async def create_collect(
         }
         collect_response = await nac_collect('collection', 'CIN1234', collect_data)
 
-        print('printing collect information fro response', collect_response.status_code,collect_response.content )
+       
 
         insert_query = collect.insert().values(collect_info)
         collect_id = await database.execute(insert_query)

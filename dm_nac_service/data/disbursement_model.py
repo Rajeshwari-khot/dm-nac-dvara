@@ -1,9 +1,9 @@
-from datetime import datetime
-from typing import Optional, List, Union
+
+from typing import Optional
 
 import sqlalchemy
-from pydantic import BaseModel, Field
-from sqlalchemy.dialects.mysql import LONGTEXT
+from pydantic import BaseModel
+
 
 
 class DisbursementBase(BaseModel):

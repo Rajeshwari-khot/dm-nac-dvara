@@ -1,4 +1,4 @@
-import json
+
 import requests
 
 from datetime import datetime
@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from dm_nac_service.data.database import insert_logs
 from dm_nac_service.commons import get_env_or_fail
 from dm_nac_service.resource.generics import response_to_dict
-from dm_nac_service.app_responses.disbursement import disbursement_request_success_response, disbursement_request_error_response1, disbursement_request_error_response2, disbursement_request_error_response3, disbursement_status_success_response1, disbursement_status_success_response2, disbursement_status_error_response1, disbursement_status_error_response2, disbursement_status_error_response3
+from dm_nac_service.app_responses.disbursement import disbursement_request_error_response1,  disbursement_status_success_response2
 from dm_nac_service.resource.log_config import logger
 
 NAC_SERVER = 'northernarc-server'
@@ -109,7 +109,7 @@ async def disbursement_get_status(context, disbursement_reference_id):
         # disbursement_status_response_dict = disbursement_status_error_response3
 
         if(disbursement_status_response == 200):
-            print('FOUND DISBURSEMENT STATUS')
+           
             logger.info(f"***** DISBURSEMENT STATUS FOUND ***** {disbursement_status_response_dict}")
             log_id = await insert_logs(str_url, 'NAC', str(disbursement_reference_id), disbursement_status_response.status_code,
                                        disbursement_status_response.content, datetime.now())

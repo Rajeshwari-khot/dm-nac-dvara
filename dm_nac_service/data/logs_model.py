@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy.dialects.mysql import LONGTEXT
+
+
 
 import sqlalchemy
 from pydantic import BaseModel, Field

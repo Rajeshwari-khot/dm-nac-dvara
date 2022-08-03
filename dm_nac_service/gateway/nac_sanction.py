@@ -24,10 +24,9 @@ async def nac_sanction(context, data):
         originator_id = get_env_or_fail(NAC_SERVER, 'originator-id', NAC_SERVER + 'originator ID not configured')
         sector_id = get_env_or_fail(NAC_SERVER, 'sector-id', NAC_SERVER + 'Sector ID not configured')
         url = validate_url + f'/po/{context}?originatorId={originator_id}&sectorId={sector_id}'
-        print('4 - Received data from sanction - ', data)
-        # print('nac sanction url', url)
+       
         str_url = str(url)
-        # str_data = data.dict()
+       
         headers = {
             "API-KEY": api_key,
             "GROUP-KEY": group_key,
@@ -38,7 +37,7 @@ async def nac_sanction(context, data):
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
         }
-        print('*********** printin sanction data to be posted', data)
+       
         sanction_context_response = requests.post(url, json=data, headers=headers)
         sanction_context_response_dict = response_to_dict(sanction_context_response)
         if (sanction_context_response.status_code == 200):
@@ -55,9 +54,8 @@ async def nac_sanction(context, data):
                                        sanction_context_response.content, datetime.now())
 
             result = JSONResponse(status_code=500, content=sanction_context_response_dict)
-        # result = sanction_context_response_dict
-        print(
-            '*********************************** SUCCESSFULLY POSTED SANCTION DATA TO NAC ENDPOINT  ***********************************')
+       
+       
     except Exception as e:
         logger.exception(f"{datetime.now()} - Issue with nac_sanction function, {e.args[0]}")
         result = JSONResponse(status_code=500,content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
@@ -73,9 +71,9 @@ async def nac_sanction_fileupload(context, data):
         originator_id = get_env_or_fail(NAC_SERVER, 'originator-id', NAC_SERVER + 'originator ID not configured')
         sector_id = get_env_or_fail(NAC_SERVER, 'sector-id', NAC_SERVER + 'Sector ID not configured')
         url = validate_url + f'/po/{context}?originatorId={originator_id}&sectorId={sector_id}'
-        # print('nac sanction url', url)
+       
         str_url = str(url)
-        # str_data = data.dict()
+       
     except Exception as e:
         log_id = await insert_logs('GATEWAY', 'NAC', 'nac_sanction_fileupload', {e.args[0]},
                                    '', datetime.now())
@@ -149,18 +147,18 @@ async def upload_file_to_nac(context, file_name, file_type, customer_id):
         }
         file_path = os.path.abspath(('./static/'))
         file_to_upload = file_path + '/' + file_name
-        print('file_to_upload', file_to_upload)
+       
         files = {'upload_file': open(file_to_upload, 'rb')}
         upload_file = requests.post(url, headers, files=files)
         if(upload_file.status_code == 200):
-            print('UPLOAD FILE RESPONSE ', upload_file.status_code, upload_file.content)
+            
             upload_file_message = json.loads(upload_file.content.decode('utf-8'))
             result = JSONResponse(status_code=200, content={"message": file_name})
-            print('PRINTING FROM upload_file_to_nac', result)
+            
             result = JSONResponse(status_code=200, content=upload_file_message)
         else:
             upload_file_message = upload_file.content.decode('utf-8')
-            print('UPLOAD FILE RESPONSE ', upload_file.status_code, upload_file.content)
+            
             result = JSONResponse(status_code=500, content=upload_file_message)
     except Exception as e:
         logger.exception(f"{datetime.now()} - Issue with upload_file_to_nac function, {e.args[0]}")
@@ -169,8 +167,3 @@ async def upload_file_to_nac(context, file_name, file_type, customer_id):
     return result
 
 
-# curl --location --request POST 'https://stage.northernarc.com/nimbus-services/api/po/uploadFile?originatorId=U65100TN2018PTC124844&fileType=AADHAR_DOC&customerId=5172285289535863' \
-# --header 'accept: */*' \
-# --header 'GROUP-KEY: 5369155212050775' \
-# --header 'API-KEY: aec33b5b9d24c7959623867150691db1fdb574a2bdd2a6e014eb55bee2d0f176' \
-# --form 'file=@"/Users/arohatech/DVARA/AROHA/dm-nac-service/static/94d150e4-6232-4f5e-a341-494d76c5c4bf.pdf"'
