@@ -16,7 +16,8 @@ NAC_SERVER = 'northernarc-server'
 
 
 async def nac_sanction(context, data):
-    """ Generic Post Method for dedupe """
+    """ Generic Post Method for sanction """
+    """get data from perdix and post into northern_arc sanction endpoint"""
     try:
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
@@ -37,7 +38,7 @@ async def nac_sanction(context, data):
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
         }
-       
+        
         sanction_context_response = requests.post(url, json=data, headers=headers)
         sanction_context_response_dict = response_to_dict(sanction_context_response)
         if (sanction_context_response.status_code == 200):
@@ -57,13 +58,14 @@ async def nac_sanction(context, data):
        
        
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with nac_sanction function, {e.args[0]}")
+        logger.exception(f"Issue with nac_sanction function, {e.args[0]}")
         result = JSONResponse(status_code=500,content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
 
     return result
 
 
 async def nac_sanction_fileupload(context, data):
+    """genric post method for fileupload"""
     try:
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
@@ -83,6 +85,7 @@ async def nac_sanction_fileupload(context, data):
 
 async def nac_get_sanction(context, customer_id):
     try:
+        """genric post method for get sanction details"""
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
         group_key = get_env_or_fail(NAC_SERVER, 'group-key', NAC_SERVER + ' group-key not configured')
@@ -120,7 +123,7 @@ async def nac_get_sanction(context, customer_id):
 
             result = JSONResponse(status_code=200, content=sanction_get_context_response_dict)
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with nac_sanction function, {e.args[0]}")
+        logger.exception(f"Issue with nac_sanction function, {e.args[0]}")
         result = JSONResponse(status_code=500,
                               content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
     return result
@@ -128,6 +131,7 @@ async def nac_get_sanction(context, customer_id):
 
 async def upload_file_to_nac(context, file_name, file_type, customer_id):
     try:
+        """genric post method for file_upload"""
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
         group_key = get_env_or_fail(NAC_SERVER, 'group-key', NAC_SERVER + ' group-key not configured')
@@ -147,18 +151,18 @@ async def upload_file_to_nac(context, file_name, file_type, customer_id):
         }
         file_path = os.path.abspath(('./static/'))
         file_to_upload = file_path + '/' + file_name
-       
+        logger.info(f'file_to_upload, {file_to_upload}')
         files = {'upload_file': open(file_to_upload, 'rb')}
         upload_file = requests.post(url, headers, files=files)
         if(upload_file.status_code == 200):
-            
+            logger.info(f'UPLOAD FILE RESPONSE , {upload_file.status_code}, {upload_file.content}')
             upload_file_message = json.loads(upload_file.content.decode('utf-8'))
             result = JSONResponse(status_code=200, content={"message": file_name})
             
             result = JSONResponse(status_code=200, content=upload_file_message)
         else:
             upload_file_message = upload_file.content.decode('utf-8')
-            
+            logger.info(f'UPLOAD FILE RESPONSE , {upload_file.status_code}, {upload_file.content}')
             result = JSONResponse(status_code=500, content=upload_file_message)
     except Exception as e:
         logger.exception(f"{datetime.now()} - Issue with upload_file_to_nac function, {e.args[0]}")

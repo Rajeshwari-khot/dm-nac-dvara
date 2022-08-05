@@ -28,6 +28,8 @@ router = APIRouter()
 async def find_customer_sanction(
         loan_id
 ):
+    """post method for find_customer_sanction"""
+    """ fetch customer_id and sanctionrefid from sanction table"""
     try:
         database = get_database()
         select_query = sanction.select().where(sanction.c.loan_id == loan_id).order_by(sanction.c.id.desc())
@@ -39,7 +41,7 @@ async def find_customer_sanction(
         
         result = JSONResponse(status_code=200, content=sanction_dict)
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with find_dedupe function, {e.args[0]}")
+        logger.exception(f"Issue with find_dedupe function, {e.args[0]}")
         
         db_log_error = {"error": 'DB', "error_description": 'Dedupe Reference ID not found in DB'}
         result = JSONResponse(status_code=500, content=db_log_error)
@@ -52,17 +54,20 @@ async def create_disbursement(
     disbursement_data
     
 ):
+    """post method for create sanction"""
+    """send disbursement data into northern_arc endpoint """
+    """get response from nac_disbursement and insert data into disbursement table"""
     try:
         database = get_database()
         disbursement_data_dict = disbursement_data
         disbursement_response = await nac_disbursement('disbursement', disbursement_data_dict)
-       
+        logger.info(f'1 -Disbursement Data from Perdix and Sending the data to create disbursement function, {disbursement_data_dict}')
         disbursement_response_status = hanlde_response_status(disbursement_response)
         disbursement_response_body = hanlde_response_body(disbursement_response)
 
         disbursement_response_content_status = disbursement_response_body['content']['status']
         disbursement_response_message = disbursement_response_body['content']['message']
-        logger.info(f"INSDIE CREATE DISBURSEMEN {disbursement_response_content_status} {disbursement_response_body}")
+        
         
         if(disbursement_response_status == 200):
             
@@ -89,10 +94,10 @@ async def create_disbursement(
             result = JSONResponse(status_code=200, content=disbursement_response_body)
             
         else:
-            logger.info(f"FAILED INSDIE CREATE DISBURSEMEN {disbursement_response_content_status} {disbursement_response_message}")
+            logger.error(f"failed inside create disbursement, {disbursement_response_message}")
             result = JSONResponse(status_code=500, content=disbursement_response_body)
             
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with find_dedupe function, {e.args[0]}")
+        logger.exception(f"Issue with find_dedupe function, {e.args[0]}")
         result = JSONResponse(status_code=500, content={"message": f"Issue with Northern Arc API, {e.args[0]}"})
     return result

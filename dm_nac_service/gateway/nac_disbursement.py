@@ -15,6 +15,7 @@ NAC_SERVER = 'northernarc-server'
 
 async def nac_disbursement(context, data):
     """ Generic Post Method for Disbursement """
+    """get data from perdix and post into disbursement endpoint"""
     try:
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
@@ -50,29 +51,30 @@ async def nac_disbursement(context, data):
         if(disbursement_context_response.status_code == 200):
 
             if(disbursement_context_response_dict['content']['status'] == 'SUCCESS'):
-                logger.info(f"***** SUCCESSFULLY POSTED DISBURSEMENT DATA TO NAC ENDPOINT ***** {disbursement_context_response_dict}")
+                logger.info(f"successfully posted disbursement data to nac endpoint,{disbursement_context_response_dict}")
                 log_id = await insert_logs(str_url, 'NAC', str(data), disbursement_context_response.status_code,
                                            disbursement_context_response.content, datetime.now())
                 result = JSONResponse(status_code=200, content=disbursement_context_response_dict)
             else:
-                logger.info(f"***** FAILED RESPONSE FROM DISBURSEMENT DATA TO NAC ENDPOINT ***** {disbursement_context_response_dict}")
+                logger.error(f"failure response from disbursement data to nac endpoint,{disbursement_context_response_dict}")
                 log_id = await insert_logs(str_url, 'NAC', str(data), disbursement_context_response.status_code,
                                            disbursement_context_response.content, datetime.now())
                 result = JSONResponse(status_code=500, content=disbursement_context_response_dict)
         else:
             log_id = await insert_logs(str_url, 'NAC', str(data), disbursement_context_response.status_code,
                                        disbursement_context_response.content, datetime.now())
-            logger.info(f"***** FAILED RESPONSE FROM DISBURSEMENT DATA TO NAC ENDPOINT ***** {disbursement_context_response_dict}")
+            logger.error(f"failure response from disbursement data to nac endpoint, {disbursement_context_response_dict}")
             result = JSONResponse(status_code=500, content=disbursement_context_response_dict)
     except Exception as e:
-        logger.info('***** FAILED POSTING DISBURSEMENT DATA TO NAC ENDPOINT *****')
-        logger.exception(f"{datetime.now()} - Issue with nac_disbursement function, {e.args[0]}")
+        
+        logger.exception(f"Issue with nac_disbursement function, {e.args[0]}")
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
     return result
 
 
 async def disbursement_get_status(context, disbursement_reference_id):
-    """ Generic GET Method for Disbursement """
+    """Generic GET Method for Disbursement"""
+    """send disburement_ref_id to disbursement status check endpoint"""
     try:
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
@@ -110,18 +112,18 @@ async def disbursement_get_status(context, disbursement_reference_id):
 
         if(disbursement_status_response == 200):
            
-            logger.info(f"***** DISBURSEMENT STATUS FOUND ***** {disbursement_status_response_dict}")
+            logger.info(f"disbursement status found ,{disbursement_status_response_dict}")
             log_id = await insert_logs(str_url, 'NAC', str(disbursement_reference_id), disbursement_status_response.status_code,
                                        disbursement_status_response.content, datetime.now())
             result = JSONResponse(status_code=200, content=disbursement_status_response_dict)
         else:
-            logger.info(f"***** DISBURSEMENT STATUS NOT FOUND ***** {disbursement_status_response_dict}")
+            logger.error(f"disbursement status not found,{disbursement_status_response_dict}")
             log_id = await insert_logs(str_url, 'NAC', str(disbursement_reference_id), disbursement_status_response.status_code,
                                        disbursement_status_response.content, datetime.now())
             result = JSONResponse(status_code=200, content=disbursement_status_response_dict)
     except Exception as e:
-        logger.info('***** PROBLEM IN FETCHING DISBURSEMENT STATUS *****')
-        logger.exception(f"{datetime.now()} - Issue with disbursement_get_status function, {e.args[0]}")
+        
+        logger.exception(f"Issue with disbursement_get_status function, {e.args[0]}")
         result = JSONResponse(status_code=500,
                               content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
     return result

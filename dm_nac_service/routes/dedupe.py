@@ -23,6 +23,7 @@ router = APIRouter()
 async def find_dedupe(
         loan_id
 ) -> DedupeDB:
+    """post method for get dedupe details"""
     try:
         
         database = get_database()
@@ -37,7 +38,7 @@ async def find_dedupe(
        
         result = JSONResponse(status_code=200, content=dedupe_dict)
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with find_dedupe function, {e.args[0]}")
+        logger.exception(f"Issue with find_dedupe function, {e.args[0]}")
         
         db_log_error = {"error": 'DB', "error_description": 'Dedupe Reference ID not found in DB'}
         result = JSONResponse(status_code=500, content=db_log_error)
@@ -53,12 +54,15 @@ async def create_dedupe(
     
 
 ) -> DedupeDB:
+    """post method for create_dedupe"""
+    """send dedupe prepare data into northarc dedupe endpoint"""
+    """get response from nac_dedupe and insert data into dedupe table"""
     try:
         database = get_database()
         
         
         dedupe_response = await nac_dedupe('dedupe', automator_data)
-        
+        logger.info(f'1 -Dedupe Data from Perdix and Sending the data to create dedupe function {automator_data}')
         dedupe_response_decode_status = hanlde_response_status(dedupe_response)
         response_body_json = hanlde_response_body(dedupe_response)
         if(dedupe_response_decode_status == 200):
@@ -140,10 +144,10 @@ async def create_dedupe(
             result = JSONResponse(status_code=200, content=response_body_json)
         else:
             
-            logger.exception(f"{datetime.now()} - Issue with create_dedupe function, {str(response_body_json)}")
+            logger.error(f"Issue with create_dedupe function, {str(response_body_json)}")
             result = JSONResponse(status_code=500, content=response_body_json)
 
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with create_dedupe function, {e.args[0]}")
+        logger.exception(f"Issue with create_dedupe function, {e.args[0]}")
         result = JSONResponse(status_code=500, content={"message": f"Issue with Northern Arc API, {e.args[0]}"})
     return result

@@ -102,7 +102,7 @@ async def perdix_fetch_loan(loan_id):
                                            response, datetime.now())
                 not_found_response = {"message": "Loan Not found in Perdix"}
                 result = JSONResponse(status_code=404, content=not_found_response)
-        # If Login is Failure
+        
         else:
             fetch_loan_error = fetch_loan_response_body
             log_id = await insert_logs(str_url, 'PERDIX', 'Unable to find loan details', str(fetch_loan_response_body.get('error')),
@@ -156,7 +156,7 @@ async def perdix_update_loan(loan_data):
 
                 result = JSONResponse(status_code=200, content=loan_update_response_dict)
             else:
-                logger.error(f"***** UNABLE TO UPDATE LOAN IN PERDIX - {loan_update_response_dict} *****")
+                logger.error(f"unable to update perdix loan ,{loan_update_response_dict}")
                 log_id = await insert_logs_all(str_url, 'PUT', 'PERDIX', 'perdix_update_loan',
                                            str(loan_update_response.status_code),
                                            str(loan_update_response.content), datetime.now())
@@ -174,7 +174,7 @@ async def perdix_update_loan(loan_data):
            
 
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with perdix_update_loan function, {e.args[0]}")
+        logger.exception(f"Issue with perdix_update_loan function, {e.args[0]}")
         
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Perdix - Update Loan - {e.args[0]}"})
     return result
@@ -183,6 +183,7 @@ async def perdix_update_loan(loan_data):
 async def download_file_from_stream(
     doc_id: str
 ):
+    """genric method for download file from stream url"""
     try:
         validate_url = get_env_or_fail(PERDIX_SERVER, 'perdix-base-url',
                                        PERDIX_SERVER + ' perdix-base-url not configured')
@@ -223,7 +224,7 @@ async def download_file_from_stream(
             
             result = JSONResponse(status_code=404, content=app_log_error)
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with perdix_update_loan function, {e.args[0]}")
+        logger.exception(f"Issue with perdix_update_loan function, {e.args[0]}")
         
         result = JSONResponse(status_code=500,content={"message": f"Error Occurred at Perdix - Update Loan - {e.args[0]}"})
     return result
