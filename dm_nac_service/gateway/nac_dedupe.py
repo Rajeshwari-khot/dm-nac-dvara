@@ -12,7 +12,8 @@ NAC_SERVER = 'northernarc-server'
 
 
 async def nac_dedupe(context, data):
-    """ Generic Post Method for dedupe """
+    """Generic Post Method for dedupe"""
+    """get data from perdix and post into dedupe endpoint"""
     try:
         validate_url = get_env_or_fail(NAC_SERVER, 'base-url', NAC_SERVER + ' base-url not configured')
         api_key = get_env_or_fail(NAC_SERVER, 'api-key', NAC_SERVER + ' api-key not configured')
@@ -55,7 +56,7 @@ async def nac_dedupe(context, data):
 
             result = JSONResponse(status_code=500, content=dedupe_context_dict)
     except Exception as e:
-        logger.exception(f"{datetime.now()} - Issue with nac_dedupe function, {e.args[0]}")
+        logger.exception(f"Issue with nac_dedupe function, {e.args[0]}")
         result = JSONResponse(status_code=500, content={"message": f"Error Occurred at Northern Arc Post Method - {e.args[0]}"})
     return result
 
