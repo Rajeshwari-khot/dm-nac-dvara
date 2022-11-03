@@ -1,4 +1,5 @@
-#pylint
+# pylint: disable=import-error
+"""main module"""
 from datetime import datetime
 import json
 import requests
