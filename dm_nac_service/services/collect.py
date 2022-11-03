@@ -3,7 +3,7 @@ import dm_nac_service.gateway.northernarc as collect_nac_gateway
 from dm_nac_service.resource.generics import response_to_dict
 from dm_nac_service.gateway.northernarc import file_upload_gateway
 import dm_nac_service.repository.collect as collect_repo
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 
 
 

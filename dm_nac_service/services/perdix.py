@@ -10,9 +10,9 @@ import dm_nac_service.resource.generics as generics
 from dm_nac_service.models.disbursement import disbursement
 import dm_nac_service.routes.dedupe as dedupe_route
 import dm_nac_service.routes.sanction as sanction_route
-from dm_nac_service.services.sanction import find_loan_id_from_sanction
+
 from dm_nac_service.services.dedupe import dedupe_service
-from dm_nac_service.services.sanction import find_sanction
+from dm_nac_service.services.sanction import find_sanction,find_loan_id_from_sanction
 
 async def fetch_data_from_db(table):
     try:

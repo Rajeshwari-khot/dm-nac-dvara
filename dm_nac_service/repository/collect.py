@@ -7,7 +7,7 @@ from dm_nac_service.models.sanction import sanction
 from dm_nac_service.models.sanction import sanction_fileupload
 import dm_nac_service.models.sanction as sanction_model
 from dm_nac_service.models.collect import collect
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 
 async def insert(collect_object):
     try:

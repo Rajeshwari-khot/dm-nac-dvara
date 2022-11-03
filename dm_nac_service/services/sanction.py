@@ -1,7 +1,7 @@
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from sqlalchemy.sql import and_, or_
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 from dm_nac_service.gateway.northernarc import nac_sanction
 import dm_nac_service.gateway.northernarc as sanction_gateway
 import dm_nac_service.gateway.perdix as perdix_gateway
@@ -11,6 +11,30 @@ import dm_nac_service.repository.sanction as sanction_repo
 from dm_nac_service.config.database import get_database
 from dm_nac_service.models.sanction import sanction
 
+
+async def find_loan_id_from_sanction(
+        customer_id:str
+):
+    """function for fetch loan_id from sanction table"""
+    try:
+        database = get_database()
+        select_query = sanction.select().where(sanction.c.customer_id == customer_id).order_by(sanction.c.id.desc())
+       
+        raw_sanction = await database.fetch_one(select_query)
+        print("raw_sanction",raw_sanction)
+
+        sanction_dict = {
+            "loanId": raw_sanction[60]
+        }
+
+        result = JSONResponse(status_code=200, content=sanction_dict)
+    except Exception as e:
+        logger.exception(f"Issue with find_dedupe function, {e.args[0]}")
+
+        db_log_error = {"error": 'DB', "error_description": 'Customer ID not found in DB'}
+        result = JSONResponse(status_code=500, content=db_log_error)
+    return result
+    
 
 
 async def find_sanction(loan_id):

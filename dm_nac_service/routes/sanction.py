@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, UploadFile,  Query
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import dm_nac_service.services.sanction as sanction_services
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 from dm_nac_service.schemas.sanction import CreateSanction
 from dm_nac_service.config.database import get_database
 

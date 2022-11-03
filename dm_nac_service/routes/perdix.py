@@ -1,5 +1,5 @@
 
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 from fastapi import APIRouter, status,Body
 from fastapi.responses import JSONResponse
 

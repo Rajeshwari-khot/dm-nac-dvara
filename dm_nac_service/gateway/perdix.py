@@ -13,7 +13,7 @@ import json
 from fastapi.encoders import jsonable_encoder
 
 from datetime import datetime
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
 from dm_nac_service.resource.generics import response_to_dict, hanlde_response_body, hanlde_response_status
 from dm_nac_service.resource.generics import response_to_dict
 from fastapi.responses import JSONResponse
