@@ -1,38 +1,42 @@
+# pylint: disable=import-error
+"""main module"""
 import uvicorn
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi_utils.tasks import repeat_every
-# Data
-from dm_nac_service.data.database import get_database, sqlalchemy_engine
-from dm_nac_service.data.dedupe_model import dedupe_metadata
-from dm_nac_service.data.sanction_model import (sanction_metadata)
-from dm_nac_service.data.disbursement_model import disbursement_metadata
-from dm_nac_service.data.collect_model import collect_metadata
-from dm_nac_service.resource.log_config import logger
+# data
+from dm_nac_service.models.dedupe import dedupe_metadata
+from dm_nac_service.models.disbursement import disbursement_metadata
+from dm_nac_service.models.sanction import sanction_metadata
 
-# Router
-from dm_nac_service.data.logs_model import (logs_metadata)
-from dm_nac_service.routes.dedupe import router as dedupte_router
+
+from dm_nac_service.models.logs import logs_metadata
+import dm_nac_service.config.database as config
+# router
+from dm_nac_service.routes.dedupe import router as dedupe_router
+from dm_nac_service.routes.disbursement import router as disbursment_router
+from dm_nac_service.routes.disbursement_status import router as disbursment_status_router
 from dm_nac_service.routes.sanction import router as sanction_router
-from dm_nac_service.routes.disbursement import router as disbursement_router
-from dm_nac_service.routes.collect import router as collect_router
-from dm_nac_service.routes.perdix_automator import router as perdix_router, update_disbursement_in_db, update_sanction_in_db
-from dm_nac_service.commons import get_env_or_fail
+from dm_nac_service.routes.perdix import router as perdix_router
+
+
+# utils
+from dm_nac_service.utils import get_env_or_fail
+
+
+
 
 origins = ["*"]
 
 
-
-app = FastAPI(title="DM-NAC",
+app = FastAPI(title="Perdix-BBPS",
               debug=True,
-    description='Dvara Money NAC Integration',
+    description='Axis BBPS',
     version="0.0.1",
     terms_of_service="http://dvara.com/terms/",
     contact={
-        "name": "DM - NAC Integration",
-        "url": "http://x-force.example.com/contact/",
+        "name": "BBPS Integration",
+        "url": "https://hackmd.io/@aayushm/BJVbXGhp_#Axis-BBPS-API-Approach-Document",
         "email": "contact@dvara.com",
     },
     license_info={
@@ -40,7 +44,14 @@ app = FastAPI(title="DM-NAC",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+SCHEDULER_TIME = 'scheduler-time'
+
+scheduler_start_in_seconds = get_env_or_fail(
+    SCHEDULER_TIME, 'start-seconds', SCHEDULER_TIME + ' start-seconds not configured')
+scheduler_end_in_seconds = get_env_or_fail(
+    SCHEDULER_TIME, 'end-seconds', SCHEDULER_TIME + ' end-seconds not configured')
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,44 +61,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SCHEDULER_TIME = 'scheduler-time'
-
-scheduler_start_in_seconds = get_env_or_fail(SCHEDULER_TIME, 'start-seconds', SCHEDULER_TIME + ' start-seconds not configured')
-scheduler_end_in_seconds = get_env_or_fail(SCHEDULER_TIME, 'end-seconds', SCHEDULER_TIME + ' end-seconds not configured')
-
 @app.on_event("startup")
 async def startup():
-    await get_database().connect()
-    
-    dedupe_metadata.create_all(sqlalchemy_engine)
-    logs_metadata.create_all(sqlalchemy_engine)
-    sanction_metadata.create_all(sqlalchemy_engine)
-    disbursement_metadata.create_all(sqlalchemy_engine)
-    collect_metadata.create_all(sqlalchemy_engine)
+    """async function for startup"""
+    await config.get_database().connect()
+    dedupe_metadata.create_all(config.sqlalchemy_engine)
+    disbursement_metadata.create_all(config.sqlalchemy_engine)
+    sanction_metadata.create_all(config.sqlalchemy_engine)
+    logs_metadata.create_all(config.sqlalchemy_engine)
 
 
 @app.on_event("startup")
 @repeat_every(seconds=int(scheduler_start_in_seconds) * int(scheduler_end_in_seconds))  # 1 minute
-async def update_mandate_task() -> str:
-    # update_sanction_in_db
-    # update_disbursement_in_db
-    logger.info('Scheduler is Running')
-    
+async def update_payments_task() -> str:
+    """async function for scheduler start"""
+    # await update_payment_status()
+    print('Schedulers Running')
+    return "Schedulers Running"
+
 
 @app.on_event("shutdown")
 async def shutdown():
-    await get_database().disconnect()
+    """async function for shutdown"""
+    await config.get_database().disconnect()
 
 
-app.include_router(dedupte_router, prefix="")
+app.include_router(dedupe_router, prefix="")
+app.include_router(disbursment_router, prefix="")
+app.include_router(disbursment_status_router, prefix="")
 app.include_router(sanction_router, prefix="")
-app.include_router(disbursement_router, prefix="")
-app.include_router(collect_router, prefix="")
 app.include_router(perdix_router, prefix="")
 
 
 
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8008)
-
-
+    """uvicorn run"""
+    uvicorn.run(app, host="0.0.0.0", port=9029)

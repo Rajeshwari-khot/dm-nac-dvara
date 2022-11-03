@@ -37,6 +37,7 @@ async def nac_dedupe(context, data):
 
         # Data Prepared using automator Data
         get_root = [data]
+        print("get_root",get_root)
        
         dedupe_context_response = requests.post(url, json=get_root, headers=headers)
        

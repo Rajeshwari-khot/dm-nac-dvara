@@ -1,0 +1,63 @@
+[
+    {
+        "dedupeRequestSource": {
+            "loanId": "169081",
+            "customerName": "Suman S K",
+            "dateOfBirth": null,
+            "contactNumber": "7022102817",
+            "kycDetailsList": [
+                {
+                    "type": "AADHARCARD",
+                    "value": "********1557"
+                },
+                {
+                    "type": "PANCARD",
+                    "value": "EDUPK5560E"
+                }
+            ],
+            "accountNumber": "5161838555",
+            "pincode": "333021"
+        },
+        "results": [
+            {
+                "attribute": "originatorId",
+                "value": null,
+                "ruleName": "Dedupe Primary Lvl1",
+                "id": "169081",
+                "isEligible": false,
+                "message": "Primary Lvl1 Duplication Detected",
+                "investorId": null
+            },
+            {
+                "attribute": "sectorId",
+                "value": null,
+                "ruleName": "Dedupe Primary Lvl2",
+                "id": "169081",
+                "isEligible": false,
+                "message": "Primary Lvl2 Duplication Detected",
+                "investorId": null
+            },
+            {
+                "attribute": "maxDPD",
+                "value": null,
+                "ruleName": "Dedupe Primary Lvl3",
+                "id": "169081",
+                "isEligible": false,
+                "message": "Primary Lvl3 Duplication Detected",
+                "investorId": null
+            }
+        ],
+        "type": "PRIMARY",
+        "dedupeReferenceId": 5273416947440096,
+        "isDedupePresent": true,
+        "referenceLoan": {
+            "originatorId": "U65100TN2018PTC124844",
+            "sectorId": 9,
+            "maxDpd": 85.0,
+            "firstName": "SHIVARAJA KENCHAPPA",
+            "dateOfBirth": "1988-06-05",
+            "mobilePhone": "7022102817",
+            "accountNumber": "845618210000861"
+        }
+    }
+]

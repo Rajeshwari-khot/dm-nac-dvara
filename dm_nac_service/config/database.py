@@ -1,6 +1,6 @@
 import sqlalchemy
 from databases import Database
-from dm_nac_service.commons import get_env_or_fail
+from dm_nac_service.utils import get_env_or_fail
 
 DATABASE_SERVER = 'database-server'
 

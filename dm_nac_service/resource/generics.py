@@ -1,46 +1,37 @@
 import json
-from datetime import datetime
+from fastapi import Header, HTTPException
 from fastapi.encoders import jsonable_encoder
-from dm_nac_service.data.database import get_database
-from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.logging_config import logger
+from dm_nac_service.utils import get_env_or_fail
+from dm_nac_service.config.database import get_database
+
+BBPS='bbps'
+
+
+def get_token_header(x_token: str = Header(...)):
+    x_token = get_env_or_fail(BBPS, 'x-token', BBPS + ' x-token not configured')
+    if x_token != x_token:
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
 
 def response_to_dict(response):
-    try:
-        """Converting bytes response to python dictionary"""
-        response_content = response.content
-        response_decode = response_content.decode("UTF-8")
-        json_acceptable_string = response_decode.replace("'", "\"")
-        convert_to_json = json.loads(json_acceptable_string)
-        response_dict = dict(convert_to_json)
-        return response_dict
-    except Exception as e:
-        logger.exception(f"Exception inside response_to_dict from generics {e.args[0]}")
+    """Converting bytes response to python dictionary"""
+    response_content = response.content
+    response_decode = response_content.decode("UTF-8")
+    json_acceptable_string = response_decode.replace("'", "\"")
+    convert_to_json = json.loads(json_acceptable_string)
+    response_dict = dict(convert_to_json)
+    return response_dict
 
 
-def tuple_to_dict(tup, di):
-    try:
-        for a, b in tup:
-            
-            di.setdefault(a, []).append(b)
-        return di
-    except Exception as e:
-        logger.exception(f"Exception inside tuple_to_dict from generics {e.args[0]}")
-
-
-def array_to_dict(lst):
-    try:
-        res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
-        return res_dct
-    except Exception as e:
-        logger.exception(f"Exception inside array_to_dict from generics {e.args[0]}")
-
-
-def handle_none(var, val):
-    if(var is None):
-        result = val
-    else:
-        result = var
-    return result
+def response_bytes_to_dict(response):
+    """Converting bytes response to python dictionary"""
+    response_content = response.content
+    response_decode = response_content.decode("utf-8")
+    convert_to_json = json.loads(response_decode)
+    # response_dict = convert_to_json[0]
+    # return response_dict
+    return convert_to_json
 
 
 def hanlde_response_body(body_data):
@@ -49,9 +40,10 @@ def hanlde_response_body(body_data):
         response_body = body_data_decode.get('body')
         if 'error' in response_body:
             response_body_json = json.loads(response_body)
-            response_body_error = response_body_json.get('error')
-            response_body_description = response_body_json.get('error_description')
-            response_to_return = {"error": response_body_error, "error_description": response_body_description}
+            # response_body_error = response_body_json.get('error')
+            # response_body_description = response_body_json.get('error_description')
+            # response_to_return = {"error": response_body_error, "error_description": response_body_description}
+            response_to_return = response_body_json
         else:
             response_body_string = response_body
             response_to_return = json.loads(response_body_string)
