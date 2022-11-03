@@ -8,6 +8,7 @@ from fastapi_utils.tasks import repeat_every
 from dm_nac_service.models.dedupe import dedupe_metadata
 from dm_nac_service.models.disbursement import disbursement_metadata
 from dm_nac_service.models.sanction import sanction_metadata
+from dm_nac_service.models.collect import collect_metadata
 
 
 from dm_nac_service.models.logs import logs_metadata
@@ -18,6 +19,8 @@ from dm_nac_service.routes.disbursement import router as disbursment_router
 from dm_nac_service.routes.disbursement_status import router as disbursment_status_router
 from dm_nac_service.routes.sanction import router as sanction_router
 from dm_nac_service.routes.perdix import router as perdix_router
+
+from dm_nac_service.routes.collect import router as collect_router
 
 
 # utils
@@ -69,6 +72,7 @@ async def startup():
     disbursement_metadata.create_all(config.sqlalchemy_engine)
     sanction_metadata.create_all(config.sqlalchemy_engine)
     logs_metadata.create_all(config.sqlalchemy_engine)
+    collect_metadata.create_all(config.sqlalchemy_engine)
 
 
 @app.on_event("startup")
@@ -91,6 +95,8 @@ app.include_router(disbursment_router, prefix="")
 app.include_router(disbursment_status_router, prefix="")
 app.include_router(sanction_router, prefix="")
 app.include_router(perdix_router, prefix="")
+app.include_router(collect_router, prefix="")
+
 
 
 

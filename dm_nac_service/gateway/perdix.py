@@ -5,6 +5,23 @@ from fastapi import Body,APIRouter
 from datetime import datetime
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+import os
+import shutil
+
+import requests
+import json
+from fastapi.encoders import jsonable_encoder
+
+from datetime import datetime
+from dm_nac_service.resource.log_config import logger
+from dm_nac_service.resource.generics import response_to_dict, hanlde_response_body, hanlde_response_status
+from dm_nac_service.resource.generics import response_to_dict
+from fastapi.responses import JSONResponse
+from dm_nac_service.schemas.logs import LogBase
+import dm_nac_service.repository.logs as api_logs
+# from dm_nac_service.data.database import insert_logs, insert_logs_all
+from dm_nac_service.commons import get_env_or_fail
+
 
 
 
@@ -354,5 +371,62 @@ async def perdix_update_loan(loan_data):
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
            
+
+async def download_file_from_stream(
+    doc_id: str
+):
+    """genric method for download file from stream url"""
+    try:
+        
+        url = validate_url + f'/api/stream/{doc_id}'
+      
+
+        download_file_response = requests.get(url)
+       
+        
+        download_file_response_headers = download_file_response.headers
+        download_file_response_headers_content = download_file_response_headers.get('Content-Disposition')
+        find_filename = download_file_response_headers_content.split('filename=', 1)
+        found_filename = find_filename[1]
+        found_file_ext = found_filename.split('.')
+        new_file_name = doc_id + '.' + found_file_ext[1]
+            
+
+        file_path = os.path.abspath(('./static/'))
+
+        with open(new_file_name, 'wb') as f:
+            f.write(download_file_response.content)
+            basename = f.name
+            
+            move_item = shutil.copy(basename, file_path)
+            
+            if os.path.exists(move_item):
+                remove = os.remove(basename)
+            else:
+                
+                
+                move_item = shutil.move(basename, file_path)
+        api_call_duration = str(download_file_response.elapsed.total_seconds()) + ' sec'
+        # info = (str_data[:4950] + '..') if len(str_data) > 4950 else str_data
+        log_info = LogBase(
+                channel='northernarc',
+                request_url=url,
+                request_method='GET',
+                params=f"{doc_id}",
+                request_body="",
+                response_body="",
+                status_code=download_file_response.status_code,
+                api_call_duration=api_call_duration,
+                request_time=str(datetime.now()))
+        await api_logs.insert(log_info)
+        return new_file_name
+           
+       
+            
+       
+    except Exception as e:
+        logger.exception(f"GATEWAY - DOWNLOAD_FILE, {e.args[0]}")
+        
+        return JSONResponse(status_code=500,content={"message": f" {e.args[0]}"})
 
     
