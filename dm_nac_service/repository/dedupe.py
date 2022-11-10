@@ -21,7 +21,7 @@ async def insert(dedupe_object):
         dedupe_id_value2=dedupe_dict['kycDetailsList'][1]['value']
         dedupe_account_number = dedupe_dict.get('accountNumber')
         dedupe_pin_code = dedupe_dict.get('pincode')
-        dedupe_result=dedupe_object.get('results')
+       
         dedupe_response_type = dedupe_object.get('type')
         dedupe_reference_id = dedupe_object.get('dedupeReferenceId')
         is_dedupe_present = dedupe_object.get('isDedupePresent')
@@ -39,7 +39,7 @@ async def insert(dedupe_object):
                                                     pincode=dedupe_pin_code,
                                                     dedupe_present=str(is_dedupe_present),
                                                     response_type=dedupe_response_type,
-                                                    dedupe_results=str(dedupe_result)
+                                                    
                                             )
         await database.execute(query)
         logger.info(f"DEDUPE INFO SUCCESSFULLY INSERTED INTO DEDUPE TABLE")

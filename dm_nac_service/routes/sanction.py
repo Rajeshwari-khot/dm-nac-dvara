@@ -2,7 +2,6 @@ from datetime import datetime
 from databases import Database
 from fastapi import APIRouter, Depends, UploadFile,  Query
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 import dm_nac_service.services.sanction as sanction_services
 from dm_nac_service.resource.logging_config import logger
 from dm_nac_service.schemas.sanction import CreateSanction
@@ -33,14 +32,12 @@ async def find_sanction(
 @router.post("/sanction", tags=["Sanction"])
 async def create_sanction(request_info : CreateSanction):
     try:
-        payload = request_info.dict()
+        payload = request_info
         create_sanction_response = await sanction_services.sanction_service(payload)
         return create_sanction_response
     except Exception as e:
         logger.exception(f"routes - sanction - create_sanction - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
-
-
 
 
 @router.post("/fileupload", tags=["Sanction"])
@@ -55,9 +52,6 @@ async def fileupload_sanction(
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
 
-
-
-
 @router.get("/sanction-status", tags=["Sanction"])
 async def sanction_status(
         customer_id: str, database: Database = Depends(get_database)
@@ -66,7 +60,7 @@ async def sanction_status(
     """sent customer_id to northern_arc sanction_status endpoint"""
     """get response as sanction data for that customer_id  """
     try:
-        get_sanction_response = await sanction_services.get_sanction_service(customer_id)
+        get_sanction_response = await sanction_services.get_sanction_status(customer_id)
         return get_sanction_response
     except Exception as e:
         logger.exception(f"routes - get-sanction-status - sanction_status , {e.args[0]}")
@@ -83,5 +77,8 @@ async def download_and_upload_file(customer_id, document_id):
         return download_file_from_stream_response
     except Exception as e:
         logger.exception(f"routes - get-download_and_upload_file - , {e.args[0]}")
-        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})       
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})     
+
+
+
 

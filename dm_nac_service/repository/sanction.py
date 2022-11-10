@@ -34,6 +34,7 @@ async def insert(sanction_object,payload):
 
 async def insert_file_reponse(sanction_file_upload_object):
     try:
+        print("sanction_file_upload_object",sanction_file_upload_object)
         sanction_file_upload_message=sanction_file_upload_object.get('content').get('message')
         sanction_file_upload_status=sanction_file_upload_object.get('content').get('status')
         

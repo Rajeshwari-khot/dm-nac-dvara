@@ -38,6 +38,8 @@ def hanlde_response_body(body_data):
     try:
         body_data_decode = jsonable_encoder(body_data)
         response_body = body_data_decode.get('body')
+        
+       
         if 'error' in response_body:
             response_body_json = json.loads(response_body)
             # response_body_error = response_body_json.get('error')
@@ -55,6 +57,7 @@ def hanlde_response_body(body_data):
 def hanlde_response_status(body_data):
     try:
         body_data_decode = jsonable_encoder(body_data)
+       
         response_body_status = body_data_decode.get('status_code')
         return response_body_status
     except Exception as e:

@@ -19,22 +19,6 @@ class DedupeAadhar(BaseModel):
     type: Optional[str] 
     value: Optional[str] 
 
-
-# class Users(BaseModel):
-#     users: List[DedupePan]
-
-# class DedupeAadhar(BaseModel):
-#     texts:List[DedupePan]
-
-# users = {"type": "PANCARD", "value": "AUNPB7828P"}, {"type": "AADHARCARD", "value": "980712312341"}
-# m = Users(users=users)
-# user=m.dict()
-# user_data=user.get('users')
-# print("user list",user_data)
-
-
-
-
 class DedupeTableBase(BaseModel):
     accountNumber: Optional[str]
     contactNumber: Optional[str] 
