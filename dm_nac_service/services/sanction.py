@@ -1,10 +1,8 @@
-
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from dm_nac_service.resource.logging_config import logger
 import dm_nac_service.gateway.northernarc as nac_gateway
 import dm_nac_service.gateway.perdix as perdix_gateway
-from dm_nac_service.resource.generics import response_to_dict
 import dm_nac_service.repository.sanction as sanction_repo
 from dm_nac_service.config.database import get_database
 from dm_nac_service.models.sanction import sanction
@@ -19,7 +17,6 @@ async def find_loan_id_from_sanction(
     try:
         database = get_database()
         select_query = sanction.select().where(sanction.c.customer_id == customer_id).order_by(sanction.c.id.desc())
-       
         raw_sanction = await database.fetch_one(select_query)
         sanction_dict = {
             "loanId": raw_sanction[60]
@@ -94,7 +91,7 @@ async def get_sanction_status(customer_id):
             logger.error("unable to get sanction status response ")
             return JSONResponse(status_code=500,
                                  content={"message": f"Unable to  get sanction status response in northernarc"})
-        get_sanction_status_response_dict= response_to_dict(get_sanction_status_response)
+        get_sanction_status_response_dict= generics.response_to_dict(get_sanction_status_response)
         await sanction_repo.insert_get_sanction_status(customer_id,get_sanction_status_response_dict)
         return get_sanction_status_response_dict
     except Exception as e:
@@ -110,7 +107,7 @@ async def download_file_from_stream_service(doc_id):
             logger.error("unable to download file from stream service")
             return JSONResponse(status_code=500,
                                  content={"message": f"Unable to create download file stream in northernarc"})
-        get_download_file_from_stream_response_dict= response_to_dict(get_download_file_from_stream_response)      
+        get_download_file_from_stream_response_dict= generics.response_to_dict(get_download_file_from_stream_response)      
         return get_download_file_from_stream_response_dict
     except Exception as e:
         logger.exception(f"services - sanction-download-file-stream  - {e.args[0]}")
