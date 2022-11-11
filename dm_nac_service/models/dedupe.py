@@ -1,11 +1,7 @@
 import sqlalchemy
 from sqlalchemy import func
 
-dedupe_metadata = sqlalchemy.MetaData()
-
-
-
-    
+dedupe_metadata = sqlalchemy.MetaData()    
 dedupe = sqlalchemy.Table(
     "dedupe",
     dedupe_metadata,
@@ -37,6 +33,5 @@ dedupe = sqlalchemy.Table(
     sqlalchemy.Column("ref_mobile_phone", sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column("ref_account_number_loan_ref", sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column("created_date", sqlalchemy.DateTime(), server_default=func.now()),
-    sqlalchemy.Column("updated_date", sqlalchemy.DateTime(), server_default=func.now())
-    
+    sqlalchemy.Column("updated_date", sqlalchemy.DateTime(), server_default=func.now())   
 )

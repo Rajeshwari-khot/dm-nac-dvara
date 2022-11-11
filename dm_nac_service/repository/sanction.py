@@ -1,12 +1,9 @@
-from email import message
-from http import client
 from fastapi.responses import JSONResponse
 from dm_nac_service.config.database import get_database
 from dm_nac_service.models.sanction import sanction
 from dm_nac_service.models.sanction import sanction_fileupload
 import dm_nac_service.models.sanction as sanction_model
 from dm_nac_service.resource.logging_config import logger
-
 
 
 async def insert(sanction_object,payload):
@@ -136,13 +133,11 @@ async def insert(sanction_object,payload):
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
 
-
 async def insert_file_reponse(sanction_file_upload_object):
     try:
         print("sanction_file_upload_object",sanction_file_upload_object)
         sanction_file_upload_message=sanction_file_upload_object.get('content').get('message')
-        sanction_file_upload_status=sanction_file_upload_object.get('content').get('status')
-        
+        sanction_file_upload_status=sanction_file_upload_object.get('content').get('status')        
         database = get_database()
         query = sanction_fileupload.insert().values(message=sanction_file_upload_message,
                                          status=sanction_file_upload_status
@@ -156,15 +151,13 @@ async def insert_file_reponse(sanction_file_upload_object):
 
 
 async def insert_get_sanction_status(customer_id,sanction_status_object):
-    try:
-        
+    try:       
         sanction_get_status=sanction_status_object.get('content').get('status')
         sanction_get_value_status=sanction_status_object.get('content').get('value').get('status')
         sanction_get_stage=sanction_status_object.get('content').get('value').get('stage')
         sanction_get_sanction_reference_id=sanction_status_object.get('content').get('value').get('sanctionReferenceId') 
         sanction_get_bureau_fetch_status=sanction_status_object.get('content').get('value').get('bureauFetchStatus')
-        sanction_get_reject_reason=sanction_status_object.get('content').get('value').get('rejectReason')
-        
+        sanction_get_reject_reason=sanction_status_object.get('content').get('value').get('rejectReason')       
         database = get_database()
         query = sanction_model.sanction.update().where(sanction.c.customer_id==customer_id).values(status=sanction_get_status,
                                          value_status=sanction_get_value_status,
@@ -172,7 +165,6 @@ async def insert_get_sanction_status(customer_id,sanction_status_object):
                                          sanction_reference_id=sanction_get_sanction_reference_id,
                                          bureau_fetch_status=sanction_get_bureau_fetch_status,
                                          reject_reason=sanction_get_reject_reason
-
         )
         await database.execute(query)
         logger.info(f"GET SANCTION STATUS  INFO LOG SUCCESSFULLY INSERTED INTO SANCTION TABLE")

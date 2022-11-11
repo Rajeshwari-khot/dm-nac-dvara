@@ -89,7 +89,7 @@ async def file_upload_service(customer_id, file, file_type):
 
 async def get_sanction_status(customer_id):
     try:      
-        get_sanction_status_response = await nac_gateway.get_nac_sanction(customer_id)
+        get_sanction_status_response = await nac_gateway.get_sanction_status(customer_id)
         if get_sanction_status_response.status_code!=200:
             logger.error("unable to get sanction status response ")
             return JSONResponse(status_code=500,

@@ -154,9 +154,8 @@ async def nac_file_upload(customer_id, file, file_type):
     return result
    
 
-async def get_nac_sanction(customer_id):
-    """ Generic Post Method for sanction """
-    """get data from perdix and post into northern_arc sanction endpoint"""
+async def get_sanction_status(customer_id):
+    """ Generic GET Method for sanction """
     try:  
         url = validate_url + f'/po/status?customerId={customer_id}&originatorId={originator_id}'       
         headers = {

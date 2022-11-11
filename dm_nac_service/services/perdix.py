@@ -191,7 +191,7 @@ async def post_dedupe_automator_data_service(
                         payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                         logger.error(f"4a-update unsuccess Perdix, {perdix_update_unsuccess}")
                 else:
-                    update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Dedupe',
+                    update_loan_info = await update_loan('DEDUPE', sm_loan_id, str_fetch_dedupe_info, 'Screening',
                                                          message_remarks,
                                                          'PROCEED', message_remarks)
                     if (update_loan_info.status_code == 200):
@@ -357,7 +357,7 @@ async def post_sanction_automator_data_service(
                 message_remarks = 'Customer Created Successfully'
                 # To Update Perdix with Sanction Reference ID
                 update_loan_info = await update_loan('SANCTION', sm_loan_id, reference_id, 'Dedupe', message_remarks,
-                                                     'PROCEED', message_remarks)                                
+                                                     'SAVE', message_remarks)                                
                 update_loan_info_status = generics.hanlde_response_status(update_loan_info)
                 update_loan_info_body=generics.hanlde_response_body(update_loan_info)
                 if(update_loan_info_status == 200):
@@ -403,7 +403,7 @@ async def update_sanction_status_in_db():
         for i in database_record_fetch:
             customer_id = i[3]
             sm_loan_id = i[63]
-            sanction_get_response = await nac_gateway.get_nac_sanction(customer_id) 
+            sanction_get_response = await nac_gateway.get_sanction_status(customer_id) 
             sanction_get_response_dict=generics.response_bytes_to_dict(sanction_get_response)    
             if(sanction_get_response.status_code == 200):
                 logger.info(f"1-getting response from nac', {sanction_get_response_dict}")

@@ -1,18 +1,17 @@
 # data
+from fastapi.responses import JSONResponse
 from dm_nac_service.config.database import get_database
 from dm_nac_service.models.logs import api_logs
 # resource
 from dm_nac_service.resource.logging_config import logger
 # config
-from dm_nac_service.utils import _raise
+
 
 
 async def insert(log_object):
     try:
-
         log_object = log_object.dict()
         Database = get_database()
-
         channel = log_object.get("channel")
         request_url = log_object.get("request_url")
         request_method = log_object.get("request_method")
@@ -35,5 +34,5 @@ async def insert(log_object):
         log_id = await Database.execute(insert_query)
         return log_id
     except Exception as e:
-        logger.exception(f"unable to insert into logs {e.args[0]}")
-        _raise(f"unable to insert into logs - {e.args[0]}")
+        logger.exception(f"unable to insert logs - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})

@@ -1,19 +1,7 @@
-
-from typing import Optional
-from enum import Enum
-
 import sqlalchemy
-from pydantic import BaseModel
 from sqlalchemy import func
 
-
-
-
-
-
 sanction_metadata = sqlalchemy.MetaData()
-
-
 sanction = sqlalchemy.Table(
     'sanction',
     sanction_metadata,
@@ -100,13 +88,11 @@ sanction_fileupload = sqlalchemy.Table(
 sanction_status =sqlalchemy.Table(
     'sanction_status',
     sanction_metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
-    
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),   
     sqlalchemy.Column('status', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('value_status', sqlalchemy.String(length=2000), nullable=True),
     sqlalchemy.Column('stage', sqlalchemy.String(length=2000), nullable=True),
     sqlalchemy.Column('bureau_fetch_status', sqlalchemy.String(length=2000), nullable=True),
     sqlalchemy.Column("created_date", sqlalchemy.DateTime(), server_default=func.now()),
     sqlalchemy.Column("updated_date", sqlalchemy.DateTime(), server_default=func.now())
-
 )

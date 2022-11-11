@@ -1,15 +1,11 @@
-# data
-
 from dm_nac_service.config.database import get_database
 from fastapi.responses import JSONResponse
 import dm_nac_service.models.dedupe as dedupe_model
-
 from dm_nac_service.resource.logging_config import logger
 
 
 async def insert(dedupe_object):
-    try:
-        
+    try:       
         dedupe_dict=dedupe_object['dedupeRequestSource']
         dedupe_loan_id = dedupe_dict.get('loanId')
         dedupe_customer_name = dedupe_dict.get('customerName')
@@ -20,8 +16,7 @@ async def insert(dedupe_object):
         dedupe_id_type2=dedupe_dict['kycDetailsList'][1]['type']
         dedupe_id_value2=dedupe_dict['kycDetailsList'][1]['value']
         dedupe_account_number = dedupe_dict.get('accountNumber')
-        dedupe_pin_code = dedupe_dict.get('pincode')
-       
+        dedupe_pin_code = dedupe_dict.get('pincode')      
         dedupe_response_type = dedupe_object.get('type')
         dedupe_reference_id = dedupe_object.get('dedupeReferenceId')
         is_dedupe_present = dedupe_object.get('isDedupePresent')
@@ -38,8 +33,7 @@ async def insert(dedupe_object):
                                                     loan_id=dedupe_loan_id,
                                                     pincode=dedupe_pin_code,
                                                     dedupe_present=str(is_dedupe_present),
-                                                    response_type=dedupe_response_type,
-                                                    
+                                                    response_type=dedupe_response_type,                                                    
                                             )
         await database.execute(query)
         logger.info(f"DEDUPE INFO SUCCESSFULLY INSERTED INTO DEDUPE TABLE")

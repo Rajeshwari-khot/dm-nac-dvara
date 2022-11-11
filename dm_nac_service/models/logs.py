@@ -2,8 +2,6 @@ import sqlalchemy
 from sqlalchemy import func
 
 logs_metadata = sqlalchemy.MetaData()
-
-
 api_logs = sqlalchemy.Table(
     "api_logs",
     logs_metadata,
