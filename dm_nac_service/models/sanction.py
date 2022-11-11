@@ -28,6 +28,7 @@ sanction = sqlalchemy.Table(
     sqlalchemy.Column('sanction_reference_id', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('bureau_fetch_status', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('reject_reason', sqlalchemy.String(length=250), nullable=True),
+    sqlalchemy.Column('mobile', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('first_name', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('last_name', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('father_name', sqlalchemy.String(length=250), nullable=True),
@@ -51,7 +52,6 @@ sanction = sqlalchemy.Table(
     sqlalchemy.Column('perm_district', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('perm_state', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('perm_pincode', sqlalchemy.String(length=250), nullable=True),
-    sqlalchemy.Column('occupation', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('company_name', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('gross_monthly_income', sqlalchemy.Integer, nullable=True),
     sqlalchemy.Column('net_monthly_income', sqlalchemy.Integer, nullable=True),
@@ -82,6 +82,7 @@ sanction = sqlalchemy.Table(
     sqlalchemy.Column('middle_name', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('marital_status', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column('loan_id', sqlalchemy.String(length=250), nullable=True),
+    sqlalchemy.Column('occupation', sqlalchemy.String(length=250), nullable=True),
     sqlalchemy.Column("created_date", sqlalchemy.DateTime(), server_default=func.now()),
     sqlalchemy.Column("updated_date", sqlalchemy.DateTime(), server_default=func.now())
 )
