@@ -519,33 +519,36 @@ async def post_disbursement_automator_data(
                 "insuranceAmount": loan_data.get("insuranceFee"),
                 "disbursementDate": loan_data.get("loanDisbursementDate")
             }                 
-            # Real Endpoint
+            # Fake Endpoint
             nac_disbursement_response = await disbursement_route.create_disbursement(disbursement_info) 
-            print("nac_disbursement_response",nac_disbursement_response)           
+                   
             # nac_disbursement_response_status = generics.hanlde_response_status(nac_disbursement_response)
             # nac_disbursement_response_body = generics.hanlde_response_body(nac_disbursement_response)
-            # print("nac_disbursement_response_body",nac_disbursement_response_body)      
-            if(nac_disbursement_response == 200):
+                
+            if(nac_disbursement_response is not None):
                 logger.info(f'2-Successfully posted disbursement data to nac endpoint, {nac_disbursement_response}')
                 disbursement_message = nac_disbursement_response['content']['message']
                 disbursement_reference_id = nac_disbursement_response['content']['value']['disbursementReferenceId']
-                payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
-                payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
+                # payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+                # payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
                 update_loan_info = await update_loan('DISBURSEMENT', sm_loan_id, disbursement_reference_id, None,
                                                      disbursement_message,
                                                      'PROCEED', disbursement_message)
+               
                 update_loan_info_status = generics.hanlde_response_status(update_loan_info)
+                update_loan_info_body = generics.hanlde_response_body(update_loan_info)
+
                 if (update_loan_info_status == 200):
-                    logger.info(f"3-updated loan information with disbursement_ref_Id,{update_loan_info}")
-                    payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
-                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
+                    logger.info(f"3-updated loan information with disbursement_ref_Id,{update_loan_info_body}")
+                    # payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+                    # payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
                     result = payload
                 else:
-                    loan_update_error = generics.hanlde_response_body(update_loan_info)
+                    loan_update_error = generics.hanlde_response_body(update_loan_info_body)
                     logger.error(f"3a-failure fecthing disbursement_id - 447 - {loan_update_error}")
                     result = JSONResponse(status_code=500, content=loan_update_error)
-                    payload['partnerHandoffIntegration']['status'] = 'FAILURE'
-                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                    # payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                    # payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                     result = payload
                 result = payload
             else:
@@ -567,8 +570,8 @@ async def post_disbursement_automator_data(
                     loan_update_error = generics.hanlde_response_body(update_loan_info)
                     logger.error(f"post_sanction_automator_data - 472 - {loan_update_error}")
                     result = JSONResponse(status_code=500, content=loan_update_error)
-                    payload['partnerHandoffIntegration']['status'] = 'FAILURE'
-                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                    # payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                    # payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                     result = payload
                 result = JSONResponse(status_code=500, content={"message": f"Issue with post_disbursement_automator_data function"})
         else:
