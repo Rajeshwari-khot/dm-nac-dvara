@@ -36,7 +36,8 @@ async def find_sanction(loan_id):
         raw_sanction = await database.fetch_one(select_query)
         sanction_dict = {
             "customerId": raw_sanction[3],
-            "dedupeRefId": raw_sanction[11]
+            "dedupeRefId": raw_sanction[11],
+            "sanction_ref_id":raw_sanction[8]
         }
         result = JSONResponse(status_code=200, content=sanction_dict)
     except Exception as e:

@@ -1,4 +1,5 @@
 import json
+from fastapi import Body
 from dm_nac_service.config.database import get_database
 from dm_nac_service.models.sanction import sanction
 from fastapi.responses import JSONResponse
@@ -8,8 +9,10 @@ import dm_nac_service.gateway.northernarc as nac_gateway
 import dm_nac_service.resource.generics as generics
 import dm_nac_service.routes.sanction as sanction_route
 import dm_nac_service.routes.dedupe as dedupe_route
+import dm_nac_service.routes.disbursement as disbursement_route
 from dm_nac_service.services.sanction import find_sanction
 
+NAC_SERVER = 'northernarc-server'
 
 async def fetch_data_from_db(table):
     try:
@@ -325,7 +328,7 @@ async def post_sanction_automator_data_service(
                 "firstInstallmentDate": installment_info.get("firstRepaymentDate"),
                 "totalProcessingFees": loan_data.get("processingFeeInPaisa"),
                 "preEmiAmount": loan_data.get("preEmi"),
-                "emi": loan_data.get("emiRequested"),
+                "emi": loan_data.get("estimatedEmi"),
                 "emiDate": emi_info.get("emiDate"),
                 "repaymentFrequency": repayment_frequency,
                 "repaymentMode": repayment_info.get("modeOfPayment"),
@@ -368,13 +371,13 @@ async def post_sanction_automator_data_service(
                 else:
                     loan_update_error = generics.hanlde_response_body(get_sanction_ref)
                     logger.error(f"failure fecthing customer_id - 350 - {loan_update_error}")
-                    result = JSONResponse(status_code=500, content=loan_update_error)
+                    result = JSONResponse(status_code=200, content=loan_update_error)
                     payload['partnerHandoffIntegration']['status'] = 'FAILURE'
                     payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                     result = payload
             else:
                 logger.error(f"post_sanction_automator_data - 356 - {response_body_json}")
-                result = JSONResponse(status_code=500, content=response_body_json)
+                result = JSONResponse(status_code=200, content=response_body_json)
                 payload['partnerHandoffIntegration']['status'] = 'FAILURE'
                 payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
                 result = payload
@@ -385,7 +388,7 @@ async def post_sanction_automator_data_service(
             update_loan_info = await update_loan('SANCTION', sm_loan_id, '', 'Rejected', str(sanction_response_get_body_value),
                                                  'PROCEED', str(sanction_response_get_body_value))
             logger.error(f"post_sanction_automator_data - 368,{update_loan_info_body}")
-            result = JSONResponse(status_code=500, content=update_loan_info_body)
+            result = JSONResponse(status_code=200, content=update_loan_info_body)
             payload['partnerHandoffIntegration']['status'] = 'FAILURE'
             payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
             result = payload
@@ -480,6 +483,102 @@ async def update_sanction_status_in_db():
         return result
 
 
+async def post_disbursement_automator_data(   
+    request_info: dict = Body(...),
+):
+    """Function to prepare user data from perdix automator"""
+    """fetch customer_id & sanctionreference_id from find_customer_sanction"""
+    """post the data into create_disburement function and get response along with disbursement_id"""
+    try:
+        database = get_database()       
+        # Below is for data published manually
+        payload = request_info
+        # Customer Data
+        customer_data = payload["enrollmentDTO"]["customer"]
+        loan_data = payload["loanDTO"]["loanAccount"]
+        # Loan Data
+        sm_loan_id = loan_data.get("id")
+        bank_accounts_info = {}
+        if len(customer_data["customerBankAccounts"]) > 0:
+            bank_accounts_info = customer_data["customerBankAccounts"][0]       
+        customer_sanction_response = await find_sanction(sm_loan_id)       
+        customer_sanction_response_status = generics.hanlde_response_status(customer_sanction_response)
+        customer_sanction_response_body = generics.hanlde_response_body(customer_sanction_response)     
+        if(customer_sanction_response_status == 200):
+            sanction_ref_id = customer_sanction_response_body.get('sanctionRefId')
+            customer_id = customer_sanction_response_body.get('customerId')                       
+            originator_id = generics.get_env_or_fail(NAC_SERVER, 'originator-id', NAC_SERVER + 'originator ID not configured')          
+            disbursement_info = {
+                "originatorId": originator_id,
+                "sanctionReferenceId": (sanction_ref_id),
+                "customerId": int(customer_id),
+                "requestedAmount": loan_data.get("loanAmount"),
+                "ifscCode": bank_accounts_info.get("ifscCode"),
+                "branchName":  bank_accounts_info.get("customerBankBranchName"),
+                "processingFees": loan_data.get("processingFeeInPaisa"),
+                "insuranceAmount": loan_data.get("insuranceFee"),
+                "disbursementDate": loan_data.get("loanDisbursementDate")
+            }                 
+            # Real Endpoint
+            nac_disbursement_response = await disbursement_route.create_disbursement(disbursement_info) 
+            print("nac_disbursement_response",nac_disbursement_response)           
+            # nac_disbursement_response_status = generics.hanlde_response_status(nac_disbursement_response)
+            # nac_disbursement_response_body = generics.hanlde_response_body(nac_disbursement_response)
+            # print("nac_disbursement_response_body",nac_disbursement_response_body)      
+            if(nac_disbursement_response == 200):
+                logger.info(f'2-Successfully posted disbursement data to nac endpoint, {nac_disbursement_response}')
+                disbursement_message = nac_disbursement_response['content']['message']
+                disbursement_reference_id = nac_disbursement_response['content']['value']['disbursementReferenceId']
+                payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+                payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
+                update_loan_info = await update_loan('DISBURSEMENT', sm_loan_id, disbursement_reference_id, None,
+                                                     disbursement_message,
+                                                     'PROCEED', disbursement_message)
+                update_loan_info_status = generics.hanlde_response_status(update_loan_info)
+                if (update_loan_info_status == 200):
+                    logger.info(f"3-updated loan information with disbursement_ref_Id,{update_loan_info}")
+                    payload['partnerHandoffIntegration']['status'] = 'SUCCESS'
+                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = disbursement_reference_id
+                    result = payload
+                else:
+                    loan_update_error = generics.hanlde_response_body(update_loan_info)
+                    logger.error(f"3a-failure fecthing disbursement_id - 447 - {loan_update_error}")
+                    result = JSONResponse(status_code=500, content=loan_update_error)
+                    payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                    result = payload
+                result = payload
+            else:
+                # payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                # payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                nac_disbursement_response_body_message = nac_disbursement_response.get('content').get('message')
+               
+                logger.error(f"3b-Issue with post_disbursement_automator_data function 460, {nac_disbursement_response_body_message}")
+                update_loan_info = await update_loan('DISBURSEMENT', sm_loan_id, '', 'Rejected',
+                                                     nac_disbursement_response_body_message,
+                                                     'PROCEED', nac_disbursement_response_body_message)
+                update_loan_info_status = generics.hanlde_response_status(update_loan_info)
+                if (update_loan_info_status == 200):
+
+                    # payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                    # payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                    result = payload
+                else:
+                    loan_update_error = generics.hanlde_response_body(update_loan_info)
+                    logger.error(f"post_sanction_automator_data - 472 - {loan_update_error}")
+                    result = JSONResponse(status_code=500, content=loan_update_error)
+                    payload['partnerHandoffIntegration']['status'] = 'FAILURE'
+                    payload['partnerHandoffIntegration']['partnerReferenceKey'] = ''
+                    result = payload
+                result = JSONResponse(status_code=500, content={"message": f"Issue with post_disbursement_automator_data function"})
+        else:
+           
+            logger.error(f"Issue with post_disbursement_automator_data function - 480")
+            result = JSONResponse(status_code=500, content={"message": f"Issue with post_disbursement_automator_data function"})
+    except Exception as e:
+        logger.exception(f"Issue with post_disbursement_automator_data function, {e.args[0]}")
+        result = JSONResponse(status_code=500, content={"message": f"Issue with post_disbursement_automator_data function, {e.args[0]}"})
+    return result
 
 
 

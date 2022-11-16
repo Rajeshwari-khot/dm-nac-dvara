@@ -6,8 +6,6 @@ import dm_nac_service.services.perdix as perdix_service
 
 
 router = APIRouter()
-
-
 NAC_SERVER = 'northernarc-server'
 
 
@@ -36,7 +34,7 @@ async def post_sanction_automator_data(
         logger.exception(f"routes - Perdix - post_automator_data - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
-
+    
 @router.post("/sanction/update-sanction-in-db", tags=["Perdix"])
 async def update_sanction_in_db():
     """post method for update sanction information in database"""
@@ -49,3 +47,16 @@ async def update_sanction_in_db():
     except Exception as e:
         logger.exception(f"routes - Perdix - update_sanction_in_db - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})    
+
+    
+@router.post("/nac-disbursement-automator-data", tags=["Automator"])
+async def post_disbursement_automator_data(   
+    request_info: dict = Body(...),
+):
+    try:
+        payload=request_info      
+        post_disbursement_automator_data_response=await perdix_service.post_disbursement_automator_data(payload)      
+        return post_disbursement_automator_data_response      
+    except Exception as e:
+        logger.exception(f"routes - Perdix - post_disbursement_automator_data - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})

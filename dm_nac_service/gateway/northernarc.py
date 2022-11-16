@@ -12,6 +12,7 @@ import dm_nac_service.repository.logs as api_logs
 from dm_nac_service.utils import get_env_or_fail
 from dm_nac_service.resource.logging_config import logger
 import dm_nac_service.resource.generics as generics
+import dm_nac_service.app_responses.disbursement as disbursement_app_response
 
 NAC_SERVER = 'northernarc-server'
 PERDIX_SERVER='perdix-server'
@@ -189,6 +190,53 @@ async def get_sanction_status(customer_id):
     except Exception as e:
         logger.exception(f"GATEWAY - NAC - GET SANCTION-STATUS - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})   
+
+
+async def nac_disbursement(data):
+    """Generic Post Method for dedupe"""
+    """get data from perdix and post into dedupe endpoint"""
+    try:       
+        url = validate_url + f'/po/disbursement/request'
+        headers = {
+            "API-KEY": api_key,
+            "GROUP-KEY": group_key,
+            "Content-Type": "application/json",
+            "Content-Length": "0",
+            "User-Agent": 'My User Agent 1.0',
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+        }
+        # Data Prepared using automator Data        
+        disbursement_context_response = requests.post(url, json=data, headers=headers)        
+        # disbursement_context_response_dict=generics.response_to_dict(disbursement_context_response)
+        #for success response
+        disbursement_context_response_dict=disbursement_app_response.disbursement_request_success_response  
+        #for error request response 1
+        # disbursement_context_response_dict=disbursement_app_response.disbursement_request_error_response1
+        #for error request response 2
+        # disbursement_context_response_dict=disbursement_app_response.disbursement_request_error_response2
+        #for error request response 3
+        # disbursement_context_response_dict=disbursement_app_response.disbursement_request_error_response3      
+        api_call_duration = str(disbursement_context_response.elapsed.total_seconds()) + ' sec'
+        str_data = str(disbursement_context_response_dict)
+        info = (str_data[:4950] + '..') if len(str_data) > 4950 else str_data
+        log_info = LogBase(
+            channel='NorthernArc',
+            request_url=url,
+            request_method='POST',
+            params=f"originatorId={originator_id},sectorId={sector_id}",
+            request_body=str(data),
+            response_body=str(info),
+            status_code=str(disbursement_context_response.status_code),
+            api_call_duration=api_call_duration,
+            request_time=str(datetime.now())
+        )
+        await api_logs.insert(log_info)
+        return disbursement_context_response_dict
+    except Exception as e:
+        logger.exception(f"GATEWAY - NORTHERNARC - NAC DISBURSEMENT - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
 
 

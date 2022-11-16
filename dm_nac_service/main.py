@@ -8,11 +8,14 @@ from fastapi_utils.tasks import repeat_every
 from dm_nac_service.models.dedupe import dedupe_metadata
 from dm_nac_service.models.sanction import sanction_metadata
 from dm_nac_service.models.logs import logs_metadata
+from dm_nac_service.models.disbursement import disbursement_metadata
 import dm_nac_service.config.database as config
 # router
 from dm_nac_service.routes.dedupe import router as dedupe_router
 from dm_nac_service.routes.sanction import router as sanction_router
 from dm_nac_service.routes.perdix import router as perdix_router
+from dm_nac_service.routes.disbursement import router as disbursement_router
+from dm_nac_service.routes.perdix import update_sanction_in_db
 # utils
 from dm_nac_service.utils import get_env_or_fail
 origins = ["*"]
@@ -57,6 +60,7 @@ async def startup():
     dedupe_metadata.create_all(config.sqlalchemy_engine)
     sanction_metadata.create_all(config.sqlalchemy_engine)
     logs_metadata.create_all(config.sqlalchemy_engine)
+    disbursement_metadata.create_all(config.sqlalchemy_engine)
     
 
 
@@ -64,7 +68,7 @@ async def startup():
 @repeat_every(seconds=int(scheduler_start_in_seconds) * int(scheduler_end_in_seconds))  # 1 minute
 async def update_payments_task() -> str:
     """async function for scheduler start"""
-    # await update_payment_status()
+    # await update_sanction_in_db()
     print('Schedulers Running')
     return "Schedulers Running"
 
@@ -78,6 +82,7 @@ async def shutdown():
 app.include_router(dedupe_router, prefix="")
 app.include_router(sanction_router, prefix="")
 app.include_router(perdix_router, prefix="")
+app.include_router(disbursement_router, prefix="")
 
 if __name__ == "__main__":
     """uvicorn run"""
