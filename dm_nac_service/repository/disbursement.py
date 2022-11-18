@@ -1,6 +1,7 @@
 from dm_nac_service.config.database import get_database
 from fastapi.responses import JSONResponse
 import dm_nac_service.models.disbursement as disbursement_model
+from dm_nac_service.models.disbursement import disbursement
 from dm_nac_service.resource.logging_config import logger
 
 
@@ -39,6 +40,30 @@ async def insert(disbursement_object,payload):
     except Exception as e:
         logger.exception(f"REPOSITORY -DISBURSEMENT - INSERT - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
+
+
+async def insert_get_disbursement_status(disbursement_reference_id,disbursement_status_object):
+    try:       
+        disbursement_get_status=disbursement_status_object.get('content').get('status')
+        disbursement_get_value_status=disbursement_status_object.get('content').get('value').get('disbursementStatus')
+        disbursement_get_utr=disbursement_status_object.get('content').get('value').get('utr')
+        disbursement_get_stage=disbursement_status_object.get('content').get('value').get('stage') 
+             
+        database = get_database()
+        query = disbursement_model.disbursement.update().where(disbursement.c.disbursement_reference_id==disbursement_reference_id).values(status=disbursement_get_status,
+                                         value_status=disbursement_get_value_status,
+                                         stage=disbursement_get_stage,
+                                         utr=disbursement_get_utr,
+                                         
+        )
+        await database.execute(query)
+        logger.info(f"GET DISBURSEMENT STATUS  INFO LOG SUCCESSFULLY INSERTED INTO DISBURSEMENT TABLE")
+    except Exception as e:
+        logger.exception(f"REPOSITORY - DISBURSEMENT- STATUS - INSERT - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
+
+
+
 
         
     

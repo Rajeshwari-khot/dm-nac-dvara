@@ -239,4 +239,50 @@ async def nac_disbursement(data):
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
 
 
+async def get_disbursement_status(disbursement_reference_id):
+    """ Generic GET Method for disbursement status """
+    try:  
+        url = validate_url + f'/po/status?disbursementReferenceId={disbursement_reference_id}&originatorId={originator_id}'       
+        headers = {
+            "API-KEY": api_key,
+            "GROUP-KEY": group_key,
+            "Content-Type": "application/json",
+            "Content-Length": "0",
+            "User-Agent": 'My User Agent 1.0',
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+        }   
+        disbursement_get_response = requests.get(url, headers=headers)  
+        #for disbursement status success response 1
+        # sanction_get_response_dict = disbursement_app_response.disbursement_status_success_response1 
+        #for disbursement status success response 2
+        disbursement_get_response_dict = disbursement_app_response.disbursement_status_success_response2 
+         #for disbursement status success response 1
+        # disbursement_get_response_dict = disbursement_app_response.disbursement_status_error_response1
+         #for disbursement status success response 1
+        # disbursement_get_response_dict = disbursement_app_response.disbursement_status_error_response2
+         #for disbursement status success response 1
+        # disbursement_get_response_dict = disbursement_app_response.disbursement_status_error_response3     
+        api_call_duration = str(disbursement_get_response.elapsed.total_seconds()) + ' sec'
+        str_data = str(disbursement_get_response_dict)
+        info = (str_data[:4950] + '..') if len(str_data) > 4950 else str_data
+        log_info = LogBase(
+            channel='northernarc',
+            request_url=url,
+            request_method='GET',
+            params=f"{originator_id},{disbursement_reference_id}",
+            request_body="",
+            response_body=str(info),
+            status_code=str(disbursement_get_response.status_code),
+            api_call_duration=api_call_duration,
+            request_time=str(datetime.now())
+        )
+        await api_logs.insert(log_info)
+        return disbursement_get_response_dict
+    except Exception as e:
+        logger.exception(f"GATEWAY - NAC - GET DISBURSEMENT-STATUS - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})   
+
+
 

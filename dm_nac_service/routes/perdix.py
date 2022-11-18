@@ -60,3 +60,17 @@ async def post_disbursement_automator_data(
     except Exception as e:
         logger.exception(f"routes - Perdix - post_disbursement_automator_data - {e.args[0]}")
         return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})
+
+
+@router.post("/sanction/update-disbursement-in-db", tags=["Perdix"])
+async def update_disbursement_in_db():
+    """post method for update disbursement information in database"""
+    """fetch remaining  data from disbursement table using fetch_data_from_db """
+    """send customer_id into nac_get_disbursement function """
+    """update data using update_loan function"""
+    try:
+        update_disbursement_in_db_response = await perdix_service.update_disbursement_in_db()
+        return update_disbursement_in_db_response
+    except Exception as e:
+        logger.exception(f"routes - Perdix - update_disbursement_in_db - {e.args[0]}")
+        return JSONResponse(status_code=500, content={"message": f"{e.args[0]}"})

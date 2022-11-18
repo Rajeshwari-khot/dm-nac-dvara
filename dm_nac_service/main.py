@@ -62,6 +62,7 @@ async def startup():
     logs_metadata.create_all(config.sqlalchemy_engine)
     disbursement_metadata.create_all(config.sqlalchemy_engine)
     
+    
 
 
 @app.on_event("startup")
